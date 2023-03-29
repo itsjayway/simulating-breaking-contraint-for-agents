@@ -260,7 +260,7 @@ function init() {
     agent.userData = {
       index: item.index,
     };
-    scene.add(agent);
+    //scene.add(agent);
     // -----------------
     //adding spotlight code
     spotLight = new THREE.SpotLight(0xffffff);
