@@ -28,8 +28,32 @@ export function step(RADIUS, sceneEntities, world) {
   }
 
   function collisionConstraint(agent_i, agent_j) {
-// TODO: implement collision constraint in 3D
+    // TODO: implement collision constraint in 3D
 
+    // current position is stored in agent.mesh.position
+    let curr_i_x = agent_i.mesh.position.x;
+    let curr_i_y = agent_i.mesh.position.y;
+    let curr_i_z = agent_i.mesh.position.z;
+
+    let curr_j_x = agent_j.mesh.position.x;
+    let curr_j_y = agent_j.mesh.position.y;
+    let curr_j_z = agent_j.mesh.position.z;
+
+    const agentCentroidDist = xyz_distance(
+      curr_i_x, curr_i_y, curr_i_z,
+      curr_j_x, curr_j_y, curr_j_z
+    );
+    
+    const agentDist = agentCentroidDist - RADIUS * 2;
+    if (agentDist < 0) {
+      agent_i.vx = 0;
+      agent_i.vy = 0;
+      agent_i.vz = 0;
+
+      agent_j.vx = 0;
+      agent_j.vy = 0;
+      agent_j.vz = 0;
+    }
   }
 
 
@@ -39,66 +63,55 @@ export function step(RADIUS, sceneEntities, world) {
 
   const AGENTSIZE = RADIUS * 2;
   const epsilon = 0.0001;
-  const timestep = 0.03;
+  const timestep = 0.009;
   const ITERNUM = 3;
   const gravity = -0.98;
 
 
   sceneEntities.forEach(function (agent) {
+    // current position is stored in agent.mesh.position 
     agent.vy += gravity * timestep;
 
-    const x_store = agent.x + agent.vx * timestep;
-    const y_store = agent.y + agent.vy * timestep;
-    const z_store = agent.z + agent.vz * timestep;
+    agent.px = agent.mesh.position.x;
+    agent.py = agent.mesh.position.y;
+    agent.pz = agent.mesh.position.z;
 
-    if (x_store > world.x_max) {
-      agent.x = world.x_max;
-      agent.vx = -agent.vx;
-    } else {
-      agent.x = x_store;
-      agent.px = agent.x;
+    agent.px += agent.vx * timestep;
+    agent.py += agent.vy * timestep;
+    agent.pz += agent.vz * timestep;
+
+    if (agent.px > world.width - agent.width / 2) {
+      agent.px = world.width - agent.width / 2;
+      agent.vx = 0;
+    }
+    if (agent.px < agent.width / 2) {
+      agent.px = agent.width / 2;
+      agent.vx = 0;
     }
 
-    if (x_store < world.x_min) {
-      agent.x = world.x_min;
-      agent.vx = -agent.vx;
-    } else {
-      agent.x = x_store;
-      agent.px = agent.x;
+    if (agent.py > world.height - agent.height / 2) {
+      agent.py = world.height - agent.height / 2;
+      agent.vy = 0;
+    }
+    if (agent.py < agent.height / 2) {
+      agent.py = agent.height / 2;
+      agent.vy = -.1 * agent.vy;
     }
 
-    if (y_store > world.y_max) {
-      agent.y = world.y_max;
-      agent.vy = -agent.vy;
-    } else {
-      agent.y = y_store;
-      agent.py = agent.y;
+    if (agent.pz > world.length - agent.length / 2) {
+      agent.pz = world.length - agent.length / 2;
+      agent.vz = 0;
+    }
+    if (agent.pz < agent.length / 2) {
+      agent.pz = agent.length / 2;
+      agent.vz = 0;
     }
 
-    if (y_store <= agent.height / 2) {
-      agent.y = agent.height / 2;
-      agent.vy = -agent.vy * 0.1;
-    } else {
-      agent.y = y_store;
-      agent.py = agent.y;
-    }
 
-    if (z_store > world.z_max) {
-      agent.z = world.z_max;
-      agent.vz = -agent.vz;
-    } else {
-      agent.z = z_store;
-      agent.pz = agent.z;
-    }
 
-    if (z_store < world.z_min) {
-      agent.z = world.z_min;
-      agent.vz = -agent.vz;
-    } else {
-      agent.z = z_store;
-      agent.pz = agent.z;
-    }
-    agent.mesh.position.set(agent.x, agent.y, agent.z);
+    agent.mesh.position.x = agent.px + agent.vx * timestep;
+    agent.mesh.position.y = agent.py + agent.vy * timestep;
+    agent.mesh.position.z = agent.pz + agent.vz * timestep;
   });
 
   for (let i = 0; i < ITERNUM; i++) {
@@ -106,7 +119,9 @@ export function step(RADIUS, sceneEntities, world) {
       sceneEntities.forEach(function (agent_j) {
         if (agent_i !== agent_j) {
           distanceConstraint(agent_i, agent_j, AGENTSIZE);
-          collisionConstraint(agent_i, agent_j);
+          if (agent_i.collidable && agent_j.collidable) {
+            collisionConstraint(agent_i, agent_j);
+          }
         }
       });
     });

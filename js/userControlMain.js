@@ -14,9 +14,9 @@ let grid;
 
 let topTexture;
 const RADIUS = 1;
-const brickMaterial = new THREE.MeshLambertMaterial({
-  color: 0xff0000,
-});
+// const brickMaterial = new THREE.MeshLambertMaterial({
+//   color: 0xff0000,
+// });
 const wreckingBallMaterial = new THREE.MeshLambertMaterial({
   // grey
   color: 0x808080,
@@ -29,7 +29,37 @@ document.body.appendChild(stats.dom);
 const brickLength = 4;
 const brickWidth = 2;
 const brickHeight = 2;
-function createBrick() {
+function createBrick(color, num) {
+  let brickMaterial = new THREE.MeshLambertMaterial({
+    color: 0xff0000,
+  });
+  const switcher = color % num;
+  switch (switcher) {
+    case 0:
+      brickMaterial.color.setHex(0xff0000);
+      break;
+    case 1:
+      brickMaterial.color.setHex(0x00ff00);
+      break;
+    case 2:
+      brickMaterial.color.setHex(0x0000ff);
+      break;
+    case 3:
+      brickMaterial.color.setHex(0xffff00);
+      break;
+    case 4:
+      brickMaterial.color.setHex(0xff00ff);
+      break;
+    case 5:
+      brickMaterial.color.setHex(0x00ffff);
+      break;
+    case 6:
+      brickMaterial.color.setHex(0x000000);
+      break;
+    case 7:
+      brickMaterial.color.setHex(0xffffff);
+  }
+
   const brick = new THREE.Mesh(
     // rectangular prism
     new THREE.BoxGeometry(brickWidth, brickHeight, brickLength),
@@ -126,9 +156,14 @@ function init() {
 
 
   const brickLayout = [];
-  for (let level = 0; level < 3; level++) {
-    for (let i = 0; i < 10; i++) {
-      for (let j = 0; j < 10; j++) {
+
+  const levels = 4;
+  const rows = 1;
+  const cols = 5;
+
+  for (let level = 0; level < levels; level++) {
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
         brickLayout.push({
           x: i * brickWidth + 0.1 * i,
           y: 10 + brickHeight / 2 + level * brickHeight + 2 * level,
@@ -137,22 +172,22 @@ function init() {
       }
     }
   }
+  let brick_idx = 0;
   brickLayout.forEach((brick) => {
-    const currBrick = createBrick();
+    const currBrick = createBrick(brick_idx, 6);
     currBrick.position.set(brick.x, brick.y, brick.z);
 
     agentData.push({
+      index: brick_idx++,
       height: brickHeight,
       mesh: currBrick,
-      x: brick.x,
-      y: brick.y,
-      z: brick.z,
       px: 0,
       py: 0,
       pz: 0,
       vx: 0,
       vy: 0,
       vz: 0,
+      collidable: true,
     });
     scene.add(currBrick);
 
