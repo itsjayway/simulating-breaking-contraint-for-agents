@@ -10,17 +10,12 @@ let world = {
   z: 80,
 };
 let agentData = [];
-let pickableObjects = [];
-let selected = null;
-let mouse = new THREE.Vector2();
-const raycaster = new THREE.Raycaster();
-let grid, ring;
+let grid;
 
-let spotLights = {};
 let topTexture;
 const RADIUS = 1;
 const brickMaterial = new THREE.MeshLambertMaterial({
-  color: 0xff0000, 
+  color: 0xff0000,
 });
 const wreckingBallMaterial = new THREE.MeshLambertMaterial({
   // grey
@@ -31,13 +26,13 @@ const stats = new Stats();
 document.body.appendChild(stats.dom);
 
 // create a brick object
-function createBrick(x, y, z) {
+const brickHeight = 2;
+function createBrick() {
   const brick = new THREE.Mesh(
     // rectangular prism
-    new THREE.BoxGeometry(2, 2, 4),
+    new THREE.BoxGeometry(2, brickHeight, 4),
     brickMaterial
   );
-  brick.position.set(x, y, z);
   brick.castShadow = true;
   brick.receiveShadow = true;
   return brick;
@@ -128,18 +123,33 @@ function init() {
   scene.add(grid);
 
   // bricks
-  const brick1 = createBrick(0, 0, 0);
-  scene.add(brick1);
   agentData.push({
-    mesh: brick1,
-    position: new THREE.Vector3(0, 0, 0),
-    velocity: new THREE.Vector3(0, 0, 0),
-    acceleration: new THREE.Vector3(0, 0, 0),
-    mass: 1,
+    height: brickHeight,
+    index: 0,
+    x: 0,
+    y: 50,
+    z: 0,
+    goal_x: 0,
+    goal_y: 0,
+    goal_z: 0,
+    vx: 0.0,
+    vy: 0.0,
+    vz: 0.0,
+    px: 0.0,
+    py: 50,
+    pz: 0.0,
+    v_pref: 0.5,
     radius: RADIUS,
-    type: "brick",
+    invmass: 0.5,
+    group_id: 1,
   });
 
+  agentData.forEach((agent) => {
+    const currBrick = createBrick();
+    currBrick.position.set(agent.x, agent.y, agent.z);
+    agent.mesh = currBrick;
+    scene.add(agent.mesh);
+  });
   world.distanceConstraints = [];
   window.addEventListener("resize", onWindowResize);
 }
@@ -149,8 +159,6 @@ function onWindowResize() {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
-
-var goalCircle = null;
 
 function render() {
   renderer.render(scene, camera);
