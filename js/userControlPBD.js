@@ -2,6 +2,10 @@ export function distance(x1, y1, x2, y2) {
   return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
+export function xyz_distance(x1, y1, z1, x2, y2, z2) {
+  return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) + (z2 - z1) * (z2 - z1));
+}
+
 export function step(RADIUS, sceneEntities, world) {
 
 
@@ -24,19 +28,8 @@ export function step(RADIUS, sceneEntities, world) {
   }
 
   function collisionConstraint(agent_i, agent_j) {
-    const agentCentroidDist = distance(agent_i.px, agent_i.pz,
-      agent_j.px, agent_j.pz);
-    const agentDist = agentCentroidDist - AGENTSIZE;
-    const dir_x = (agent_j.px - agent_i.px) / agentCentroidDist;
-    const dir_z = (agent_j.pz - agent_i.pz) / agentCentroidDist;
-    const agent_i_scaler = agent_i.invmass / (agent_i.invmass + agent_j.invmass) * agentDist
-    const agent_j_scaler = agent_j.invmass / (agent_i.invmass + agent_j.invmass) * agentDist
-    if (agentDist < 0) {
-      agent_i.px += agent_i_scaler * dir_x
-      agent_i.pz += agent_i_scaler * dir_z
-      agent_j.px += - agent_j_scaler * dir_x
-      agent_j.pz += - agent_j_scaler * dir_z
-    }
+// TODO: implement collision constraint in 3D
+
   }
 
 
@@ -69,7 +62,7 @@ export function step(RADIUS, sceneEntities, world) {
     if (x_store < world.x_min) {
       agent.x = world.x_min;
       agent.vx = -agent.vx;
-    }  else {
+    } else {
       agent.x = x_store;
       agent.px = agent.x;
     }
@@ -82,8 +75,8 @@ export function step(RADIUS, sceneEntities, world) {
       agent.py = agent.y;
     }
 
-    if (y_store <=agent.height/2) {
-      agent.y = agent.height/2;
+    if (y_store <= agent.height / 2) {
+      agent.y = agent.height / 2;
       agent.vy = -agent.vy * 0.1;
     } else {
       agent.y = y_store;
@@ -105,7 +98,6 @@ export function step(RADIUS, sceneEntities, world) {
       agent.z = z_store;
       agent.pz = agent.z;
     }
-
     agent.mesh.position.set(agent.x, agent.y, agent.z);
   });
 

@@ -26,11 +26,13 @@ const stats = new Stats();
 document.body.appendChild(stats.dom);
 
 // create a brick object
+const brickLength = 4;
+const brickWidth = 2;
 const brickHeight = 2;
 function createBrick() {
   const brick = new THREE.Mesh(
     // rectangular prism
-    new THREE.BoxGeometry(2, brickHeight, 4),
+    new THREE.BoxGeometry(brickWidth, brickHeight, brickLength),
     brickMaterial
   );
   brick.castShadow = true;
@@ -122,33 +124,38 @@ function init() {
   grid.rotation.x = -Math.PI / 2;
   scene.add(grid);
 
-  // bricks
-  agentData.push({
-    height: brickHeight,
-    index: 0,
-    x: 0,
-    y: 50,
-    z: 0,
-    goal_x: 0,
-    goal_y: 0,
-    goal_z: 0,
-    vx: 0.0,
-    vy: 0.0,
-    vz: 0.0,
-    px: 0.0,
-    py: 50,
-    pz: 0.0,
-    v_pref: 0.5,
-    radius: RADIUS,
-    invmass: 0.5,
-    group_id: 1,
-  });
 
-  agentData.forEach((agent) => {
+  const brickLayout = [];
+  for (let level = 0; level < 3; level++) {
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        brickLayout.push({
+          x: i * brickWidth + 0.1 * i,
+          y: 10 + brickHeight / 2 + level * brickHeight + 2 * level,
+          z: j * brickLength + 0.1 * j,
+        });
+      }
+    }
+  }
+  brickLayout.forEach((brick) => {
     const currBrick = createBrick();
-    currBrick.position.set(agent.x, agent.y, agent.z);
-    agent.mesh = currBrick;
-    scene.add(agent.mesh);
+    currBrick.position.set(brick.x, brick.y, brick.z);
+
+    agentData.push({
+      height: brickHeight,
+      mesh: currBrick,
+      x: brick.x,
+      y: brick.y,
+      z: brick.z,
+      px: 0,
+      py: 0,
+      pz: 0,
+      vx: 0,
+      vy: 0,
+      vz: 0,
+    });
+    scene.add(currBrick);
+
   });
   world.distanceConstraints = [];
   window.addEventListener("resize", onWindowResize);
