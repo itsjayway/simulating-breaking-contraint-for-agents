@@ -192,6 +192,33 @@ function init() {
     scene.add(currBrick);
 
   });
+
+  // sphere with grey lambert material
+  // it's also part of the collision detection
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(RADIUS * 8, 32, 32),
+    new THREE.MeshLambertMaterial({
+      color: 0x888888,
+    })
+  );
+  const last_brick_height = 10 + brickHeight / 2 + levels * brickHeight + 2 * levels;
+  sphere.position.set(0, last_brick_height + RADIUS * 8, 0);
+  sphere.castShadow = true;
+  sphere.receiveShadow = true;
+  scene.add(sphere);
+  agentData.push({
+    index: brick_idx++,
+    height: last_brick_height + brickHeight / 2,
+    mesh: sphere,
+    px: 0,
+    py: 0,
+    pz: 0,
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    collidable: true,
+  });
+
   world.distanceConstraints = [];
   window.addEventListener("resize", onWindowResize);
 }
