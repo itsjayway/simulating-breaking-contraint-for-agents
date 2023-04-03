@@ -93,23 +93,36 @@ function createWall() {
   // each row is offset by half a brick
 
   const wall = new THREE.Group();
-  const levels = 4;
+  const levels = 7;
   const bricksPerLevel = 5;
   const offset = brickWidth / 2;
   const brick = createBrick(0, 0);
 
+  let brick_idx = 0;
   for (let j = 0; j < levels; j++) {
     for (let i = 0; i < bricksPerLevel; i++) {
-      const brick = createBrick(j+i, bricksPerLevel);
+      const brick = createBrick(j + i, bricksPerLevel);
       if (j % 2 === 0) {
         // brick.rotation.y = Math.PI / 2;
         brick.position.z = i * brickWidth + offset;
       }
       else {
-        brick.position.z = i * brickWidth + offset + brickWidth / 2;
+        brick.position.z = i * brickWidth + offset + brickWidth; // change this to just brickwidth
       }
       brick.position.y = j * brickHeight + brickHeight / 2;
       wall.add(brick);
+      agentData.push({
+        index: brick_idx++,
+        height: brickHeight,
+        mesh: brick,
+        px: 0,
+        py: 0,
+        pz: 0,
+        vx: 0,
+        vy: 0,
+        vz: 0,
+        collidable: true,
+      });
     }
   }
   return wall;
