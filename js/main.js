@@ -1,3 +1,13 @@
+/* This project simulates a wrecking ball hitting a wall of bricks.
+  * The bricks are arranged mathematically
+  * The wrecking ball is a sphere
+  * Collision is handled in physics.js
+  * The wrecking ball is controlled by the mouse
+  * The camera is controlled by the mouse
+  * The wall is made of bricks
+*/
+
+
 import * as THREE from "three";
 import * as PHY from "simplePhysics";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -14,11 +24,8 @@ let grid;
 
 let topTexture;
 const RADIUS = 1;
-// const brickMaterial = new THREE.MeshLambertMaterial({
-//   color: 0xff0000,
-// });
+
 const wreckingBallMaterial = new THREE.MeshLambertMaterial({
-  // grey
   color: 0x808080,
 });
 
@@ -26,8 +33,8 @@ const stats = new Stats();
 document.body.appendChild(stats.dom);
 
 // create a brick object
-const brickLength = 4;
-const brickWidth = 2;
+const brickLength = 2;
+const brickWidth = 4;
 const brickHeight = 2;
 function createBrick(color, num) {
   let brickMaterial = new THREE.MeshLambertMaterial({
@@ -67,7 +74,45 @@ function createBrick(color, num) {
   );
   brick.castShadow = true;
   brick.receiveShadow = true;
+  brick.rotation.y = Math.PI / 2;
   return brick;
+}
+
+function createWreckingBall() {
+  const wreckingBall = new THREE.Mesh(
+    new THREE.SphereGeometry(RADIUS, 32, 32),
+    wreckingBallMaterial
+  );
+  wreckingBall.castShadow = true;
+  wreckingBall.receiveShadow = true;
+  return wreckingBall;
+}
+
+function createWall() {
+  // create a wall of bricks arranged mathematically
+  // each row is offset by half a brick
+
+  const wall = new THREE.Group();
+  const levels = 4;
+  const bricksPerLevel = 5;
+  const offset = brickWidth / 2;
+  const brick = createBrick(0, 0);
+
+  for (let j = 0; j < levels; j++) {
+    for (let i = 0; i < bricksPerLevel; i++) {
+      const brick = createBrick(j+i, bricksPerLevel);
+      if (j % 2 === 0) {
+        // brick.rotation.y = Math.PI / 2;
+        brick.position.z = i * brickWidth + offset;
+      }
+      else {
+        brick.position.z = i * brickWidth + offset + brickWidth / 2;
+      }
+      brick.position.y = j * brickHeight + brickHeight / 2;
+      wall.add(brick);
+    }
+  }
+  return wall;
 }
 
 
@@ -154,70 +199,15 @@ function init() {
   grid.rotation.x = -Math.PI / 2;
   scene.add(grid);
 
+  // create wrecking ball
+  var wreckingBall = createWreckingBall();
+  wreckingBall.position.set(0, 100, 0);
+  scene.add(wreckingBall);
 
-  const brickLayout = [];
+  // create wall
+  var wall = createWall();
+  scene.add(wall);
 
-  const levels = 4;
-  const rows = 1;
-  const cols = 5;
-
-  for (let level = 0; level < levels; level++) {
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        brickLayout.push({
-          x: i * brickWidth + 0.1 * i,
-          y: 10 + brickHeight / 2 + level * brickHeight + 2 * level,
-          z: j * brickLength + 0.1 * j,
-        });
-      }
-    }
-  }
-  let brick_idx = 0;
-  brickLayout.forEach((brick) => {
-    const currBrick = createBrick(brick_idx, 6);
-    currBrick.position.set(brick.x, brick.y, brick.z);
-
-    agentData.push({
-      index: brick_idx++,
-      height: brickHeight,
-      mesh: currBrick,
-      px: 0,
-      py: 0,
-      pz: 0,
-      vx: 0,
-      vy: 0,
-      vz: 0,
-      collidable: true,
-    });
-    scene.add(currBrick);
-
-  });
-
-  // sphere with grey lambert material
-  // it's also part of the collision detection
-  const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(RADIUS * 8, 32, 32),
-    new THREE.MeshLambertMaterial({
-      color: 0x888888,
-    })
-  );
-  const last_brick_height = 10 + brickHeight / 2 + levels * brickHeight + 2 * levels;
-  sphere.position.set(0, last_brick_height + RADIUS * 8, 0);
-  sphere.castShadow = true;
-  sphere.receiveShadow = true;
-  scene.add(sphere);
-  agentData.push({
-    index: brick_idx++,
-    height: last_brick_height + brickHeight / 2,
-    mesh: sphere,
-    px: 0,
-    py: 0,
-    pz: 0,
-    vx: 0,
-    vy: 0,
-    vz: 0,
-    collidable: true,
-  });
 
   world.distanceConstraints = [];
   window.addEventListener("resize", onWindowResize);
