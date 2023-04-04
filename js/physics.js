@@ -63,7 +63,7 @@ export function step(RADIUS, sceneEntities, world) {
 
   const AGENTSIZE = RADIUS * 2;
   const epsilon = 0.0001;
-  const timestep = 0.009;
+  const timestep = 0.003;
   const ITERNUM = 3;
   const gravity = -0.98;
 

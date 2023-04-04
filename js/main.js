@@ -88,6 +88,46 @@ function createWreckingBall() {
   return wreckingBall;
 }
 
+
+function plss() {
+  // Create the suspended point
+  var suspendedPointGeometry = new THREE.BoxGeometry(2, 0.5, 2); // Change to BoxGeometry and adjust the size as needed
+  var suspendedPointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  var suspendedPoint = new THREE.Mesh(suspendedPointGeometry, suspendedPointMaterial);
+  suspendedPoint.position.set(-5, 30, 10);
+
+  // Create the wrecking ball
+  let wb = createWreckingBall();
+  scene.add(wb);
+
+  // Add the suspended point, ball, and string to the scene
+  scene.add(suspendedPoint);
+
+  // Create the string container
+  var stringContainer = new THREE.Object3D();
+
+  // Create the string
+  var stringGeometry = new THREE.CylinderGeometry(0.1, 0.1, 20, 16);
+  var stringMaterial = new THREE.MeshBasicMaterial({ color: 0xFF00FF });
+  var string = new THREE.Mesh(stringGeometry, stringMaterial);
+  string.position.set(0, 0, 0); // Adjust the position to fit your scene
+  stringContainer.add(string);
+
+  // Position the string container between the suspended point and the ball
+  stringContainer.position.set(-5, 20, 10);
+
+  // Add the wrecking ball to the string container
+  wb.position.set(0, -10, 0); // Position the ball relative to the container
+  stringContainer.add(wb);
+
+  // Add the string container to the scene
+  scene.add(stringContainer);
+
+  // Add the suspended point to the scene
+  scene.add(suspendedPoint);
+
+}
+
 function createWall() {
   // create a wall of bricks arranged mathematically
   // each row is offset by half a brick
@@ -221,6 +261,7 @@ function init() {
   var wall = createWall();
   scene.add(wall);
 
+plss();
 
   world.distanceConstraints = [];
   window.addEventListener("resize", onWindowResize);
