@@ -1,124 +1,102 @@
-export function distance(x1, y1, x2, y2) {
-  return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+export function calculate_distance(x1, y1, z1, x2, y2, z2) {
+  const dx = x1 - x2;
+  const dy = y1 - y2;
+  const dz = z1 - z2;
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-export function xyz_distance(x1, y1, z1, x2, y2, z2) {
-  return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) + (z2 - z1) * (z2 - z1));
-}
-
-export function step(RADIUS, sceneEntities, world) {
-
-
-
-  /*  -----------------------  */
-  function distanceConstraint(agent_i, agent_j, desiredDistance) {
-    const agentCentroidDist = distance(agent_i.px, agent_i.pz,
-      agent_j.px, agent_j.pz);
-    const agentDist = agentCentroidDist - desiredDistance;
-    const dir_x = (agent_j.px - agent_i.px) / agentCentroidDist;
-    const dir_z = (agent_j.pz - agent_i.pz) / agentCentroidDist;
-    const agent_i_scaler = 0.1 * agent_i.invmass / (agent_i.invmass + agent_j.invmass) * agentDist;
-    const agent_j_scaler = 0.1 * agent_j.invmass / (agent_i.invmass + agent_j.invmass) * agentDist;
-    if (Math.abs(agentDist) > epsilon) {
-      agent_i.px += agent_i_scaler * dir_x
-      agent_i.pz += agent_i_scaler * dir_z
-      agent_j.px += - agent_j_scaler * dir_x
-      agent_j.pz += - agent_j_scaler * dir_z
-    }
-  }
-
-  function collisionConstraint(agent_i, agent_j) {
-    // TODO: implement collision constraint in 3D
-
-    // current position is stored in agent.mesh.position
-    let curr_i_x = agent_i.mesh.position.x;
-    let curr_i_y = agent_i.mesh.position.y;
-    let curr_i_z = agent_i.mesh.position.z;
-
-    let curr_j_x = agent_j.mesh.position.x;
-    let curr_j_y = agent_j.mesh.position.y;
-    let curr_j_z = agent_j.mesh.position.z;
-
-    const agentCentroidDist = xyz_distance(
-      curr_i_x, curr_i_y, curr_i_z,
-      curr_j_x, curr_j_y, curr_j_z
-    );
-    
-    const agentDist = agentCentroidDist - RADIUS * 2;
-    if (agentDist < 0) {
-      agent_i.vx = 0;
-      agent_i.vy = 0;
-      agent_i.vz = 0;
-
-      agent_j.vx = 0;
-      agent_j.vy = 0;
-      agent_j.vz = 0;
-    }
-  }
-
-
-  /*  -----------------------  */
-
-
-
-  const AGENTSIZE = RADIUS * 2;
+export function step(brickDimensions, sceneEntities, world) {
   const epsilon = 0.0001;
-  const timestep = 0.003;
+  const timestep = 0.04;
   const ITERNUM = 3;
   const gravity = -0.98;
 
 
+  function distanceConstraint(agent_i, agent_j, desiredDistance) {
+  }
+
+  function collisionConstraint(agent_i, agent_j) {
+    // implement collision constraint
+
+    const distance = calculate_distance(
+      agent_i.px,
+      agent_i.py,
+      agent_i.pz,
+      agent_j.px,
+      agent_j.py,
+      agent_j.pz
+    );
+    if (distance < brickDimensions.height / 2 + brickDimensions.width / 2
+      ) { // bricks are touching
+      const penetration = agent_i.width / 2 + agent_j.width / 2 - distance;
+      const nx = (agent_i.px - agent_j.px) / distance;
+      const ny = (agent_i.py - agent_j.py) / distance;
+      const nz = (agent_i.pz - agent_j.pz) / distance;
+      const tx = -ny;
+      const ty = nx;
+      const tz = 0;
+      const b = (agent_i.vx - agent_j.vx) * nx + (agent_i.vy - agent_j.vy) * ny + (agent_i.vz - agent_j.vz) * nz;
+      const d = (agent_i.vx - agent_j.vx) * tx + (agent_i.vy - agent_j.vy) * ty + (agent_i.vz - agent_j.vz) * tz;
+      const m1 = 1 / agent_i.mass;
+      const m2 = 1 / agent_j.mass;
+      const e = 0.5;
+      const j = -(1 + e) * b / (m1 + m2);
+      const k = -(1 + e) * d / (m1 + m2);
+      agent_i.vx += j * nx + k * tx;
+      agent_i.vy += j * ny + k * ty;
+      agent_i.vz += j * nz + k * tz;
+      agent_j.vx -= j * nx + k * tx;
+      agent_j.vy -= j * ny + k * ty;
+      agent_j.vz -= j * nz + k * tz;
+      agent_i.px += nx * penetration / 2;
+      agent_i.py += ny * penetration / 2;
+      agent_i.pz += nz * penetration / 2;
+      agent_j.px -= nx * penetration / 2;
+      agent_j.py -= ny * penetration / 2;
+      agent_j.pz -= nz * penetration / 2;
+
+
+    }
+  }
+
   sceneEntities.forEach(function (agent) {
-    // current position is stored in agent.mesh.position 
+    // gravity
+
     agent.vy += gravity * timestep;
 
-    agent.px = agent.mesh.position.x;
-    agent.py = agent.mesh.position.y;
-    agent.pz = agent.mesh.position.z;
+    // update position
+
+    agent.vx *= 0.99;
+    agent.vy *= 0.99;
+    agent.vz *= 0.99;
 
     agent.px += agent.vx * timestep;
     agent.py += agent.vy * timestep;
     agent.pz += agent.vz * timestep;
 
-    if (agent.px > world.width - agent.width / 2) {
-      agent.px = world.width - agent.width / 2;
-      agent.vx = 0;
-    }
-    if (agent.px < agent.width / 2) {
-      agent.px = agent.width / 2;
-      agent.vx = 0;
-    }
+    // floor constraint
 
-    if (agent.py > world.height - agent.height / 2) {
-      agent.py = world.height - agent.height / 2;
+    if (agent.py < brickDimensions.height / 2) {
+      agent.py = brickDimensions.height / 2;
       agent.vy = 0;
     }
-    if (agent.py < agent.height / 2) {
-      agent.py = agent.height / 2;
-      agent.vy = -.1 * agent.vy;
-    }
 
-    if (agent.pz > world.length - agent.length / 2) {
-      agent.pz = world.length - agent.length / 2;
-      agent.vz = 0;
-    }
-    if (agent.pz < agent.length / 2) {
-      agent.pz = agent.length / 2;
-      agent.vz = 0;
-    }
+    // update mesh position
+
+    agent.mesh.position.x = agent.px;
+    agent.mesh.position.y = agent.py;
+    agent.mesh.position.z = agent.pz;
 
 
 
-    agent.mesh.position.x = agent.px + agent.vx * timestep;
-    agent.mesh.position.y = agent.py + agent.vy * timestep;
-    agent.mesh.position.z = agent.pz + agent.vz * timestep;
+
   });
 
   for (let i = 0; i < ITERNUM; i++) {
     sceneEntities.forEach(function (agent_i) {
       sceneEntities.forEach(function (agent_j) {
         if (agent_i !== agent_j) {
-          distanceConstraint(agent_i, agent_j, AGENTSIZE);
+          distanceConstraint(agent_i, agent_j);
           if (agent_i.collidable && agent_j.collidable) {
             collisionConstraint(agent_i, agent_j);
           }
@@ -126,6 +104,4 @@ export function step(RADIUS, sceneEntities, world) {
       });
     });
   }
-
 }
-

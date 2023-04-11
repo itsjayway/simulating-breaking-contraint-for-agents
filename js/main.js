@@ -16,8 +16,8 @@ import Stats from "three/addons/libs/stats.module.js";
 
 let renderer, scene, camera;
 let world = {
-  x: 80,
-  z: 80,
+  length: 80,
+  width: 80,
 };
 let agentData = [];
 let grid;
@@ -34,8 +34,15 @@ document.body.appendChild(stats.dom);
 
 // create a brick object
 const brickLength = 2;
-const brickWidth = 4;
+const brickWidth = 2;
 const brickHeight = 2;
+
+const brickDimensions = {
+  length: brickLength,
+  width: brickWidth,
+  height: brickHeight,
+};
+
 function createBrick(color, num) {
   let brickMaterial = new THREE.MeshLambertMaterial({
     color: 0xff0000,
@@ -88,8 +95,12 @@ function createWreckingBall() {
   return wreckingBall;
 }
 
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2();
+var intersected = null;
+var selected = null;
 
-function plss() {
+function createBallSystem() {
   // Create the suspended point
   var suspendedPointGeometry = new THREE.BoxGeometry(2, 0.5, 2); // Change to BoxGeometry and adjust the size as needed
   var suspendedPointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
@@ -133,8 +144,8 @@ function createWall() {
   // each row is offset by half a brick
 
   const wall = new THREE.Group();
-  const levels = 7;
-  const bricksPerLevel = 5;
+  const levels = 6;
+  const bricksPerLevel = 6;
   const offset = brickWidth / 2;
   const brick = createBrick(0, 0);
 
@@ -142,22 +153,25 @@ function createWall() {
   for (let j = 0; j < levels; j++) {
     for (let i = 0; i < bricksPerLevel; i++) {
       const brick = createBrick(j + i, bricksPerLevel);
+      brick.position.x = 0;
       if (j % 2 === 0) {
         // brick.rotation.y = Math.PI / 2;
-        brick.position.z = i * brickWidth + offset;
+        brick.position.z = i * brickWidth;
       }
       else {
-        brick.position.z = i * brickWidth + offset + brickWidth; // change this to just brickwidth
+        brick.position.z = i * brickWidth; // change this to just brickwidth
       }
-      brick.position.y = j * brickHeight + brickHeight / 2;
+      brick.position.y = (j + 1) * brickHeight + offset * j;
       wall.add(brick);
       agentData.push({
         index: brick_idx++,
-        height: brickHeight,
+        height: brickDimensions.height,
+        width: brickDimensions.width,
         mesh: brick,
-        px: 0,
-        py: 0,
-        pz: 0,
+        mass: 1,
+        px: brick.position.x,
+        py: brick.position.y,
+        pz: brick.position.z,
         vx: 0,
         vy: 0,
         vz: 0,
@@ -239,7 +253,7 @@ function init() {
   topTexture.repeat.set(3, 3);
   //topTexture.rotation = -Math.PI / 2;
   // grid
-  const geometry = new THREE.PlaneGeometry(world.x, world.z, 10, 10);
+  const geometry = new THREE.PlaneGeometry(world.length, world.width, 10, 10);
   const material = new THREE.MeshPhongMaterial({
     map: texture,
     //side: THREE.DoubleSide,
@@ -252,25 +266,21 @@ function init() {
   grid.rotation.x = -Math.PI / 2;
   scene.add(grid);
 
-  // create wrecking ball
-  var wreckingBall = createWreckingBall();
-  wreckingBall.position.set(0, 100, 0);
-  scene.add(wreckingBall);
+  // // create wrecking ball
+  // var wreckingBall = cre();
+  // wreckingBall.position.set(0, 100, 0);
+  // scene.add(wreckingBall);
 
   // create wall
   var wall = createWall();
   scene.add(wall);
 
-plss();
+  createBallSystem();
 
   world.distanceConstraints = [];
-  window.addEventListener("resize", onWindowResize);
-}
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  // window.addEventListener("resize", onWindowResize);
+  // window.addEventListener("mousedown", onMouseDown, false);
+  // window.addEventListener("mousemove", onMouseMove, false);
 }
 
 function render() {
@@ -278,10 +288,9 @@ function render() {
 }
 
 function animate() {
-  requestAnimationFrame(animate);
-  PHY.step(RADIUS, agentData, world);
+  PHY.step(brickDimensions, agentData, world)
   renderer.render(scene, camera);
-  stats.update();
+  requestAnimationFrame(animate);
 }
 
-animate();
+requestAnimationFrame(animate);
