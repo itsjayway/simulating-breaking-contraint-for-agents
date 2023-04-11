@@ -102,6 +102,63 @@ var selected = null;
 
 function createBallSystem() {
   // Create the suspended point
+  var suspendedPointGeometry = new THREE.BoxGeometry(2, 0.5, 2);
+  var suspendedPointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  var suspendedPoint = new THREE.Mesh(suspendedPointGeometry, suspendedPointMaterial);
+  suspendedPoint.position.set(-5, 30, 10);
+
+  scene.add(suspendedPoint);
+
+  var wb = createWreckingBall();
+  scene.add(wb);
+
+  // Initialize the position of the ball
+  var initialPosition = new THREE.Vector3(0, -10, 0);
+  wb.position.copy(initialPosition);
+
+  // Set the velocity of the ball
+  var velocity = new THREE.Vector3(0.01, 0, 0); // move in the negative z direction with speed 0.1
+
+  // Create the animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Update the position of the ball
+    wb.position.add(velocity);
+
+    // Render the scene
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+
+  // Create the string container
+  var stringContainer = new THREE.Object3D();
+
+  // Create the string
+  var stringGeometry = new THREE.CylinderGeometry(0.1, 0.1, 20, 16);
+  var stringMaterial = new THREE.MeshBasicMaterial({ color: 0xFF00FF });
+  var string = new THREE.Mesh(stringGeometry, stringMaterial);
+  string.position.set(0, 0, 0); // Adjust the position to fit your scene
+  stringContainer.add(string);
+
+  // Position the string container between the suspended point and the ball
+  stringContainer.position.set(-5, 20, 10);
+
+  // Add the wrecking ball to the string container
+  wb.position.set(0, -10, 0); // Position the ball relative to the container
+  stringContainer.add(wb);
+
+  // Add the string container to the scene
+  scene.add(stringContainer);
+
+  // Add the suspended point to the scene
+  scene.add(suspendedPoint);
+}
+/*
+function plss() {
+  // Create the suspended point
   var suspendedPointGeometry = new THREE.BoxGeometry(2, 0.5, 2); // Change to BoxGeometry and adjust the size as needed
   var suspendedPointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
   var suspendedPoint = new THREE.Mesh(suspendedPointGeometry, suspendedPointMaterial);
@@ -111,7 +168,7 @@ function createBallSystem() {
   let wb = createWreckingBall();
   scene.add(wb);
 
-  // Add the suspended point, ball, and string to the scene
+  //add suspended point to
   scene.add(suspendedPoint);
 
   // Create the string container
@@ -137,7 +194,56 @@ function createBallSystem() {
   // Add the suspended point to the scene
   scene.add(suspendedPoint);
 
-}
+  // Add the physics engine
+  const physics = new PHY.physics;
+
+  // Add the wrecking ball to the physics engine
+  const wreckingBall = new PHY.Sphere(RADIUS);
+  physics.addParticle(wreckingBall);
+
+  // Add the suspended point to the physics engine
+  const suspendedPointPhysics = new PHY.Particle();
+  suspendedPointPhysics.setPosition(
+    new PHY.Vector3(
+      suspendedPoint.position.x,
+      suspendedPoint.position.y,
+      suspendedPoint.position.z
+    )
+  );
+  physics.addParticle(suspendedPointPhysics);
+
+  // Add the string to the physics engine
+  const stringLength = 20;
+  const stringPhysics = new PHY.Spring(
+    suspendedPointPhysics,
+    wreckingBall,
+    stringLength
+  );
+  physics.addSpring(stringPhysics);
+
+  // Update the wrecking ball's position based on the physics simulation
+  const updateWreckingBall = () => {
+    const wreckingBallPosition = wreckingBall.getPosition();
+    wb.position.set(
+      wreckingBallPosition.x,
+      wreckingBallPosition.y,
+      wreckingBallPosition.z
+    );
+  };
+
+  // Render the scene
+  const render = () => {
+    stats.update();
+    requestAnimationFrame(render);
+    physics.tick();
+    updateWreckingBall();
+    renderer.render(scene, camera);
+  };
+
+  // Start the rendering loop
+  render();
+}*/
+
 
 function createWall() {
   // create a wall of bricks arranged mathematically
@@ -276,6 +382,7 @@ function init() {
   scene.add(wall);
 
   createBallSystem();
+ //plss();
 
   world.distanceConstraints = [];
   // window.addEventListener("resize", onWindowResize);
@@ -288,7 +395,7 @@ function render() {
 }
 
 function animate() {
-  PHY.step(brickDimensions, agentData, world)
+  PHY.step(brickDimensions, agentData, world);
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
