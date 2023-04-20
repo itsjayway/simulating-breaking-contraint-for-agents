@@ -33,17 +33,19 @@ const stats = new Stats();
 document.body.appendChild(stats.dom);
 
 // create a brick object
-const brickLength = 2;
-const brickWidth = 2;
-const brickHeight = 2;
+const brickdepth = 8;
+const brickWidth = 8;
+const brickHeight = 8;
 
 const brickDimensions = {
-  length: brickLength,
+  depth: brickdepth,
   width: brickWidth,
   height: brickHeight,
 };
 
-function createBrick(color, num) {
+const projectileSizeMultiplier = 2;
+
+export function createBrick(color, num, sizeMultiplier = 1) {
   let brickMaterial = new THREE.MeshLambertMaterial({
     color: 0xff0000,
   });
@@ -76,12 +78,14 @@ function createBrick(color, num) {
 
   const brick = new THREE.Mesh(
     // rectangular prism
-    new THREE.BoxGeometry(brickWidth, brickHeight, brickLength),
+    new THREE.BoxGeometry(brickWidth * sizeMultiplier, brickHeight * sizeMultiplier, brickdepth * sizeMultiplier),
     brickMaterial
   );
   brick.castShadow = true;
   brick.receiveShadow = true;
+  brick.rotation.x = 0;
   brick.rotation.y = Math.PI / 2;
+  brick.rotation.z = 0;
   return brick;
 }
 
@@ -109,15 +113,15 @@ function createBallSystem() {
 
   scene.add(suspendedPoint);
 
-  var wb = createWreckingBall();
-  scene.add(wb);
+  // var wb = createWreckingBall();
+  var wb = createBrick(0, 1);
 
   // Initialize the position of the ball
   var initialPosition = new THREE.Vector3(0, -10, 0);
-  wb.position.copy(initialPosition);
-
+  // wb.position.copy(initialPosition);
+  wb.position.set(0, -10, 0);
   // Set the velocity of the ball
-  var velocity = new THREE.Vector3(0.01, 0, 0); // move in the negative z direction with speed 0.1
+  var velocity = new THREE.Vector3(0.03, 0, 0); // move in the negative z direction with speed 0.1
 
   // Create the animation loop
   function animate() {
@@ -149,6 +153,7 @@ function createBallSystem() {
   // Add the wrecking ball to the string container
   wb.position.set(0, -10, 0); // Position the ball relative to the container
   stringContainer.add(wb);
+  // scene.add(wb);
 
   // Add the string container to the scene
   scene.add(stringContainer);
@@ -250,8 +255,8 @@ function createWall() {
   // each row is offset by half a brick
 
   const wall = new THREE.Group();
-  const levels = 6;
-  const bricksPerLevel = 6;
+  const levels = 3;
+  const bricksPerLevel = 3;
   const offset = brickWidth / 2;
   const brick = createBrick(0, 0);
 
@@ -265,7 +270,7 @@ function createWall() {
         brick.position.z = i * brickWidth;
       }
       else {
-        brick.position.z = i * brickWidth; // change this to just brickwidth
+        brick.position.z = i * brickWidth + offset;
       }
       brick.position.y = (j + 1) * brickHeight + offset * j;
       wall.add(brick);
@@ -273,6 +278,7 @@ function createWall() {
         index: brick_idx++,
         height: brickDimensions.height,
         width: brickDimensions.width,
+        depth: brickDimensions.depth,
         mesh: brick,
         mass: 1,
         px: brick.position.x,
@@ -288,6 +294,35 @@ function createWall() {
   return wall;
 }
 
+function createProjectile() {
+  // create a brick that is 'thrown' at the wall
+  let projectile = createBrick(0, 0, projectileSizeMultiplier);
+  // projectile.position.set(-5 * brickWidth, 10, 5);
+  projectile.position.x = -5 * brickWidth;
+  projectile.position.y = brickDimensions.height * projectileSizeMultiplier + 10;
+  projectile.position.z = 5;
+  projectile.castShadow = true;
+  projectile.receiveShadow = true;
+
+
+  agentData.push({
+    index: agentData.length,
+    height: brickDimensions.height * projectileSizeMultiplier,
+    width: brickDimensions.width * projectileSizeMultiplier,
+    depth: brickDimensions.depth * projectileSizeMultiplier,
+    mesh: projectile,
+    mass: 1,
+    px: projectile.position.x,
+    py: projectile.position.y,
+    pz: projectile.position.z,
+    vx: 20,
+    vy: 0,
+    vz: 0,
+    collidable: true,
+  });
+
+  return projectile;
+}
 
 init();
 render();
@@ -381,8 +416,10 @@ function init() {
   var wall = createWall();
   scene.add(wall);
 
-  createBallSystem();
- //plss();
+  // createBallSystem();
+  var projectile = createProjectile();
+  scene.add(projectile);
+
 
   world.distanceConstraints = [];
   // window.addEventListener("resize", onWindowResize);
@@ -394,8 +431,15 @@ function render() {
   renderer.render(scene, camera);
 }
 
+let output;
 function animate() {
-  PHY.step(brickDimensions, agentData, world);
+  output = PHY.step(brickDimensions, agentData, world);
+  agentData = output.totalEntities;
+
+  output.newBricks.forEach((brick) => {
+    scene.add(brick);
+  });
+
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
