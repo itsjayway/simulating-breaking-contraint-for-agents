@@ -315,7 +315,7 @@ function createProjectile() {
     px: projectile.position.x,
     py: projectile.position.y,
     pz: projectile.position.z,
-    vx: 20,
+    vx: 10,
     vy: 0,
     vz: 0,
     collidable: true,

@@ -44,7 +44,7 @@ export function step(brickDimensions, sceneEntities, world) {
   let arrayLength = sceneEntities.length;
 
   const epsilon = 0.0001;
-  const timestep = 0.04;
+  const timestep = 0.03;
   const ITERNUM = 3;
   const gravity = -0.98;
   const breakingThreshold = 12.5;
@@ -211,9 +211,9 @@ export function step(brickDimensions, sceneEntities, world) {
 
     // update position
 
-    agent.vx *= 0.99;
-    agent.vy *= 0.99;
-    agent.vz *= 0.99;
+    agent.vx *= 0.995;
+    agent.vy *= 0.995;
+    agent.vz *= 0.995;
     // if (agent.vx < 0.1) agent.vx = 0.1;
 
     agent.px += agent.vx * timestep;
