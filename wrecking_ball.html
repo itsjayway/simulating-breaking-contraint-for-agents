@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta charset="utf-8">
-<title>Agent Dynamics Tutorial</title>
+<html>
 
-<script type="importmap">
-  {
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <title>Agent Dynamics Tutorial</title>
+
+  <script type="importmap">
+    {
     "imports": {
       "three": "./build/three.module.js",
       "three/addons/": "./examples/jsm/",
@@ -15,23 +17,21 @@
 </script>
 
 
-<script type="module" src="./js/main.js" ></script>
+  <script type="module" src="./js/main.js"></script>
 
 </head>
 
 <body style="margin:0;background:black;text-align:left;">
+  <!-- add slider to control timestep -->
+  <div style="position:absolute;top:0px;right:0px;width:300px">
+    <label for="timestep">Timestep
+      <p id="timestepValue"
+      style="color:white;font-size:12px;margin:0px;padding:0px;"
+      ></p>
+    </label>
+    <input type="range" id="timestep" name="timestep" min="0.00001" max="0.01" step="0.0001" value="0.0001">
+  </div>
 
 </body>
+
 </html>
-
-
-
-
-
-
-
-
-
-
-
-

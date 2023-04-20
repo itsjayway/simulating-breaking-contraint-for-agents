@@ -2,14 +2,13 @@
 import * as THREE from "three";
 
 /* ==================== Parameters ==================== */
-const timestep = 0.0015;
 const minimumSize = Math.pow(2, -2);
 
 /* ==================== Constants ==================== */
 const epsilon = 0.0001;
 const ITERNUM = 3;
-const gravity = -0.98;
-const breakingThreshold = 60;
+const gravity = -2.98;
+const breakingThreshold = 100;
 
 /* ==================== Initializers ==================== */
 
@@ -46,7 +45,7 @@ function createBrick(color, newBrickDimensions) {
   return brick;
 }
 
-export function step(brickDimensions, sceneEntities, world, multiplier) {
+export function step(sceneEntities, world, timestep) {
 
   let arrayLength = sceneEntities.length;
 
@@ -155,26 +154,41 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
         }
       }
 
-      const penetration = agent_i[dimension] / 2 + agent_j[dimension] / 2 - distance;
+      const penetration = agent_i[dimension] / 2 + agent_j[dimension] / 2 - distance; // amount of overlap
+      
+      // normal vector formed by the two agents
       const nx = (agent_i.px - agent_j.px) / distance;
       const ny = (agent_i.py - agent_j.py) / distance;
       const nz = (agent_i.pz - agent_j.pz) / distance;
+
+      // tangent vector
       const tx = -ny;
       const ty = nx;
       const tz = 0;
+
+      // relative velocity
       const b = (agent_i.vx - agent_j.vx) * nx + (agent_i.vy - agent_j.vy) * ny + (agent_i.vz - agent_j.vz) * nz;
       const d = (agent_i.vx - agent_j.vx) * tx + (agent_i.vy - agent_j.vy) * ty + (agent_i.vz - agent_j.vz) * tz;
+      
       const m1 = 1 / agent_i.invmass;
       const m2 = 1 / agent_j.invmass;
+      
+      // coefficient of restitution
       const e = 0.5;
+
+      // calculate impulse
       const j = -(1 + e) * b / (m1 + m2);
       const k = -(1 + e) * d / (m1 + m2);
+      
+      // apply impulse to agents' velocities
       agent_i.vx += j * nx + k * tx;
       agent_i.vy += j * ny + k * ty;
       agent_i.vz += j * nz + k * tz;
       agent_j.vx -= j * nx + k * tx;
       agent_j.vy -= j * ny + k * ty;
       agent_j.vz -= j * nz + k * tz;
+
+      // apply undo-penetration to agents' positions
       agent_i.px += nx * penetration / 2;
       agent_i.py += ny * penetration / 2;
       agent_i.pz += nz * penetration / 2;
@@ -182,6 +196,7 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
       agent_j.py -= ny * penetration / 2;
       agent_j.pz -= nz * penetration / 2;
 
+      // apply collision recoil to agents
       const f = calculateForces(j, nx, k, tx);
 
       let i = 0;

@@ -35,13 +35,13 @@ document.body.appendChild(stats.dom);
 /* ========== INIT ========== */
 
 const projectile_init = {
-  x: -20,
+  x: -30,
   y: 8,
-  z: 9,
-  vx: 90,
+  z: 0,
+  vx: 50,
   vy: -3,
-  vz: -4,
-  invmass: 1/10
+  vz: 0,
+  invmass: 1 / 20
 }
 
 const projectileSizeMultiplier = 1.5;
@@ -176,27 +176,34 @@ function createBallSystem() {
   scene.add(suspendedPoint);
 }
 
+function positionGenerator(i, j) {
+  const x = i * brickWidth;
+  const y = j * brickHeight;
+  const z = 0;
+  const offset = 0;
+  return {
+    x: x + offset,
+    y: y + offset,
+    z: z + offset,
+  }
+}
+
 function createWall() {
   // create a wall of bricks arranged mathematically
 
   const wall = new THREE.Group();
   const levels = 7;
   const bricksPerLevel = 5;
-  // const offset = brickWidth / 2;
-  const offset = 0;
 
   let brick_idx = 0;
+  var brick_init;
   for (let j = 0; j < levels; j++) {
     for (let i = 0; i < bricksPerLevel; i++) {
+      brick_init = positionGenerator(i, j);
       const brick = createBrick(j + i, bricksPerLevel);
-      brick.position.x = 0 + i * brickWidth;
-      if (j % 2 === 0) {
-        brick.position.z = i * brickWidth;
-      }
-      else {
-        brick.position.z = i * brickWidth + offset;
-      }
-      brick.position.y = (j) * brickHeight + offset * j;
+      brick.position.x = brick_init.x;
+      brick.position.y = brick_init.y;
+      brick.position.z = brick_init.z;
 
       wall.add(brick);
       agentData.push({
@@ -374,7 +381,9 @@ function render() {
 
 let output;
 function animate() {
-  output = PHY.step(brickDimensions, agentData, world, projectileSizeMultiplier);
+  let timestep = document.getElementById("timestep").value;
+  document.getElementById("timestepValue").innerHTML = timestep;
+  output = PHY.step(agentData, world, timestep);
 
   // update agentData to reflect updated in physics
   agentData = output.totalEntities;
