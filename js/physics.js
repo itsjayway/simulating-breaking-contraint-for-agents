@@ -42,8 +42,8 @@ const epsilon = 0.0001;
 const timestep = 0.003;
 const ITERNUM = 3;
 const gravity = -0.98;
-const breakingThreshold = 40;
-const minimumSize = Math.pow(2,-3);
+const breakingThreshold = 60;
+const minimumSize = Math.pow(2, -3);
 
 
 export function step(brickDimensions, sceneEntities, world, multiplier) {

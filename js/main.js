@@ -264,7 +264,7 @@ function createWall() {
   for (let j = 0; j < levels; j++) {
     for (let i = 0; i < bricksPerLevel; i++) {
       const brick = createBrick(j + i, bricksPerLevel);
-      brick.position.x = 0;
+      brick.position.x = 0 + i * brickWidth + offset;
       if (j % 2 === 0) {
         // brick.rotation.y = Math.PI / 2;
         brick.position.z = i * brickWidth;
@@ -329,8 +329,8 @@ function createProjectile() {
     py: projectile.position.y,
     pz: projectile.position.z,
     vx: 90,
-    vy: 0,
-    vz: -4,
+    vy: -3,
+    vz: -6,
     rotation: {
       x: projectile.rotation.x,
       y: projectile.rotation.y,
