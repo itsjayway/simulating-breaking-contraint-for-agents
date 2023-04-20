@@ -274,7 +274,7 @@ function createWall() {
       }
       // brick.position.y = (j + 1) * brickHeight + offset * j;
       brick.position.y = (j) * brickHeight + offset * j;
-      brick.rotation.y = Math.PI / 3;
+      // brick.rotation.y = Math.PI / 3;
       wall.add(brick);
       agentData.push({
         index: brick_idx++,
@@ -313,7 +313,7 @@ function createProjectile() {
   projectile.position.x = -10 * brickWidth;
   projectile.position.y = brickDimensions.height * projectileSizeMultiplier + 5;
   projectile.position.z = 5;
-  projectile.rotation.y = Math.PI / 4;
+  // projectile.rotation.y = Math.PI / 4;
   projectile.castShadow = true;
   projectile.receiveShadow = true;
 

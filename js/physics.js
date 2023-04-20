@@ -64,92 +64,149 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
       agent_j.pz
     );
 
-    // Calculate the relative position vector of agent_j with respect to agent_i
-    const relativePos = new THREE.Vector3(
-      agent_j.px - agent_i.px,
-      agent_j.py - agent_i.py,
-      agent_j.pz - agent_i.pz
-    );
 
-    // Rotate the relative position vector based on the rotation of agent_i
-    const rotation_i = new THREE.Quaternion().setFromEuler(agent_i.mesh.rotation);
-    relativePos.applyQuaternion(rotation_i);
+    if (distance < agent_i.width / 2 + agent_j.width / 2 + epsilon) {// bricks are touching
+      // console.log("collision detected");
 
-    // Rotate the relative position vector based on the rotation of agent_j
-    const rotation_j = new THREE.Quaternion().setFromEuler(agent_j.mesh.rotation);
-    relativePos.applyQuaternion(rotation_j);
-
-    // Calculate the rotated distance between the two agents
-    const rotatedDistance = relativePos.length();
-
-    if (rotatedDistance < agent_i.width / 2 + agent_j.width / 2 + epsilon) {
-      // Calculate the collision normal and tangent vectors
-      const nx = relativePos.x / rotatedDistance;
-      const ny = relativePos.y / rotatedDistance;
-      const nz = relativePos.z / rotatedDistance;
+      const penetration = agent_i.width / 2 + agent_j.width / 2 - distance;
+      const nx = (agent_i.px - agent_j.px) / distance;
+      const ny = (agent_i.py - agent_j.py) / distance;
+      const nz = (agent_i.pz - agent_j.pz) / distance;
       const tx = -ny;
       const ty = nx;
       const tz = 0;
-
-      // Calculate the relative velocity between the two agents
-      const dvx = agent_i.vx - agent_j.vx;
-      const dvy = agent_i.vy - agent_j.vy;
-      const dvz = agent_i.vz - agent_j.vz;
-      const b = dvx * nx + dvy * ny + dvz * nz;
-      const d = dvx * tx + dvy * ty + dvz * tz;
-
-      // Calculate the impulse magnitude
+      const b = (agent_i.vx - agent_j.vx) * nx + (agent_i.vy - agent_j.vy) * ny + (agent_i.vz - agent_j.vz) * nz;
+      const d = (agent_i.vx - agent_j.vx) * tx + (agent_i.vy - agent_j.vy) * ty + (agent_i.vz - agent_j.vz) * tz;
       const m1 = 1 / agent_i.invmass;
       const m2 = 1 / agent_j.invmass;
       const e = 0.5;
       const j = -(1 + e) * b / (m1 + m2);
       const k = -(1 + e) * d / (m1 + m2);
-
-      // Update the velocities of the agents
       agent_i.vx += j * nx + k * tx;
       agent_i.vy += j * ny + k * ty;
       agent_i.vz += j * nz + k * tz;
-
       agent_j.vx -= j * nx + k * tx;
       agent_j.vy -= j * ny + k * ty;
       agent_j.vz -= j * nz + k * tz;
-
-      // Resolve the overlap
-      const penetration = agent_i.width / 2 + agent_j.width / 2 - rotatedDistance;
       agent_i.px += nx * penetration / 2;
       agent_i.py += ny * penetration / 2;
       agent_i.pz += nz * penetration / 2;
-
       agent_j.px -= nx * penetration / 2;
       agent_j.py -= ny * penetration / 2;
       agent_j.pz -= nz * penetration / 2;
 
-      // Calculate the forces acting on each agent
       const force_i_n = j * nx / timestep;
       const force_i_t = k * tx / timestep;
+
       const force_j_n = j * nx / timestep;
       const force_j_t = k * tx / timestep;
 
-      // apply the forces to the agents
-      agent_i.fx += force_i_n * nx + force_i_t * tx;
-      agent_i.fy += force_i_n * ny + force_i_t * ty;
-      agent_i.fz += force_i_n * nz + force_i_t * tz;
+      // Calculate the magnitudes of the forces acting on each agent
+      const force_i = Math.sqrt(force_i_n * force_i_n + force_i_t * force_i_t);
+      const force_j = Math.sqrt(force_j_n * force_j_n + force_j_t * force_j_t);
 
-      agent_j.fx += force_j_n * nx + force_j_t * tx;
-      agent_j.fy += force_j_n * ny + force_j_t * ty;
-      agent_j.fz += force_j_n * nz + force_j_t * tz;
+      if (!agent_i.unbreakable) {
+        if (force_i > breakingThreshold) {
+          if (agent_i.height < minimumSize || agent_i.width < minimumSize || agent_i.depth < minimumSize) {
+            return;
+          }
+          // console.log("breaking agent_i");
+          // console.log(agent_i);
+          const brick = createBrick(agent_i.mesh.material.color, {
+            height: agent_i.height / 2,
+            width: agent_i.width / 2,
+            depth: agent_i.depth / 2,
+          });
+          brick.position.x = agent_i.px;
+          brick.position.y = agent_i.py;
+          brick.position.z = agent_i.pz;
 
-      // Calculate the torque acting on each agent
-      const torque_i_n = force_i_n * agent_i.width / 2;
+          // console.log(brick);
 
-      const torque_j_n = force_j_n * agent_j.width / 2;
+          for (let i = 2; i < 2; i++) {
+            outputBricks.push(brick);
+            sceneEntities.push({
+              index: sceneEntities.length,
+              height: agent_i.height / 2,
+              width: agent_i.width / 2,
+              depth: agent_i.depth / 2,
+              mesh: brick,
+              invmass: agent_i.invmass / 2,
+              px: brick.position.x,
+              py: brick.position.y,
+              pz: brick.position.z,
+              vx: agent_i.vx,
+              vy: agent_i.vy,
+              vz: agent_i.vz,
+              collidable: true,
+            });
+          }
+          agent_i.height /= 2;
+          agent_i.width /= 2;
+          agent_i.depth /= 2;
+          agent_i.invmass /= 2;
 
-      // apply the torque to the agents
-      agent_i.torque += torque_i_n;
-      agent_j.torque += torque_j_n;
+          agent_i.mesh.scale.x /= 2;
+          agent_i.mesh.scale.y /= 2;
+          agent_i.mesh.scale.z /= 2;
+
+        }
+      }
+
+      if (!agent_j.unbreakable) {
+        if (force_j > breakingThreshold) {
+          if (agent_j.height < minimumSize || agent_j.width < minimumSize || agent_j.depth < minimumSize) {
+            return;
+          }
+          // console.log("breaking agent_j");
+
+          const brick = createBrick(agent_j.mesh.material.color, {
+            height: agent_j.height / 2,
+            width: agent_j.width / 2,
+            depth: agent_j.depth / 2,
+          });
+          brick.position.x = agent_j.px + nx * penetration / 2;
+          brick.position.y = agent_j.py + ny * penetration / 2;
+          brick.position.z = agent_j.pz + nz * penetration / 2;
+
+          // console.log(brick);
+
+
+          for (let i = 0; i < 2; i++) {
+            outputBricks.push(brick);
+
+            sceneEntities.push({
+              index: sceneEntities.length,
+              height: agent_j.height / 2,
+              width: agent_j.width / 2,
+              depth: agent_j.depth / 2,
+              mesh: brick,
+              invmass: agent_j.invmass / 2,
+              px: brick.position.x,
+              py: brick.position.y,
+              pz: brick.position.z,
+              vx: agent_j.vx,
+              vy: agent_j.vy,
+              vz: agent_j.vz,
+              collidable: true,
+            });
+          }
+
+          agent_j.height /= 2;
+          agent_j.width /= 2;
+          agent_j.depth /= 2;
+          agent_j.invmass /= 2;
+
+
+          agent_j.mesh.scale.x /= 2;
+          agent_j.mesh.scale.y /= 2;
+          agent_j.mesh.scale.z /= 2;
+          console.log(agent_j);
+
+        }
+      }
     }
   }
-
 
 
   sceneEntities.forEach(function (agent) {
@@ -173,19 +230,6 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
     agent.px += agent.vx * timestep;
     agent.py += agent.vy * timestep;
     agent.pz += agent.vz * timestep;
-
-    // update rotation
-
-    agent.rotation += agent.torque * timestep;
-    agent.torque *= 0.9;
-    
-    // update mesh
-
-    agent.mesh.position.set(agent.px, agent.py, agent.pz);
-    agent.mesh.rotation.set(0, agent.rotation, 0);
-
-
-
 
     // floor constraint
 
