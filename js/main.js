@@ -33,17 +33,17 @@ const stats = new Stats();
 document.body.appendChild(stats.dom);
 
 // create a brick object
-const brickdepth = 8;
-const brickWidth = 8;
-const brickHeight = 8;
+const brickdepth = 2;
+const brickWidth = 2;
+const brickHeight = 2;
 
+const projectileSizeMultiplier = 1.5;
 const brickDimensions = {
   depth: brickdepth,
   width: brickWidth,
   height: brickHeight,
 };
 
-const projectileSizeMultiplier = 2;
 
 export function createBrick(color, num, sizeMultiplier = 1) {
   let brickMaterial = new THREE.MeshLambertMaterial({
@@ -74,6 +74,9 @@ export function createBrick(color, num, sizeMultiplier = 1) {
       break;
     case 7:
       brickMaterial.color.setHex(0xffffff);
+      break;
+    default:
+      brickMaterial.color.setHex(0x808080);
   }
 
   const brick = new THREE.Mesh(
@@ -83,9 +86,6 @@ export function createBrick(color, num, sizeMultiplier = 1) {
   );
   brick.castShadow = true;
   brick.receiveShadow = true;
-  brick.rotation.x = 0;
-  brick.rotation.y = Math.PI / 2;
-  brick.rotation.z = 0;
   return brick;
 }
 
@@ -255,10 +255,10 @@ function createWall() {
   // each row is offset by half a brick
 
   const wall = new THREE.Group();
-  const levels = 3;
-  const bricksPerLevel = 3;
-  const offset = brickWidth / 2;
-  const brick = createBrick(0, 0);
+  const levels = 7;
+  const bricksPerLevel = 5;
+  // const offset = brickWidth / 2;
+  const offset = 0;
 
   let brick_idx = 0;
   for (let j = 0; j < levels; j++) {
@@ -272,7 +272,9 @@ function createWall() {
       else {
         brick.position.z = i * brickWidth + offset;
       }
-      brick.position.y = (j + 1) * brickHeight + offset * j;
+      // brick.position.y = (j + 1) * brickHeight + offset * j;
+      brick.position.y = (j) * brickHeight + offset * j;
+      brick.rotation.y = Math.PI / 3;
       wall.add(brick);
       agentData.push({
         index: brick_idx++,
@@ -280,14 +282,24 @@ function createWall() {
         width: brickDimensions.width,
         depth: brickDimensions.depth,
         mesh: brick,
-        mass: 1,
+        invmass: 1,
         px: brick.position.x,
         py: brick.position.y,
         pz: brick.position.z,
         vx: 0,
         vy: 0,
         vz: 0,
+        fx: 0,
+        fy: 0,
+        fz: 0,
+        torque: 0,
+        rotation: {
+          x: brick.rotation.x,
+          y: brick.rotation.y,
+          z: brick.rotation.z
+        },
         collidable: true,
+        unbreakable: false
       });
     }
   }
@@ -296,11 +308,12 @@ function createWall() {
 
 function createProjectile() {
   // create a brick that is 'thrown' at the wall
-  let projectile = createBrick(0, 0, projectileSizeMultiplier);
+  let projectile = createBrick(31, 20, projectileSizeMultiplier);
   // projectile.position.set(-5 * brickWidth, 10, 5);
-  projectile.position.x = -5 * brickWidth;
-  projectile.position.y = brickDimensions.height * projectileSizeMultiplier + 10;
+  projectile.position.x = -10 * brickWidth;
+  projectile.position.y = brickDimensions.height * projectileSizeMultiplier + 5;
   projectile.position.z = 5;
+  projectile.rotation.y = Math.PI / 4;
   projectile.castShadow = true;
   projectile.receiveShadow = true;
 
@@ -311,14 +324,20 @@ function createProjectile() {
     width: brickDimensions.width * projectileSizeMultiplier,
     depth: brickDimensions.depth * projectileSizeMultiplier,
     mesh: projectile,
-    mass: 1,
+    invmass: 1/3,
     px: projectile.position.x,
     py: projectile.position.y,
     pz: projectile.position.z,
-    vx: 10,
+    vx: 30,
     vy: 0,
-    vz: 0,
+    vz: 2,
+    rotation: {
+      x: projectile.rotation.x,
+      y: projectile.rotation.y,
+      z: projectile.rotation.z
+    },
     collidable: true,
+    unbreakable:true
   });
 
   return projectile;
@@ -433,7 +452,7 @@ function render() {
 
 let output;
 function animate() {
-  output = PHY.step(brickDimensions, agentData, world);
+  output = PHY.step(brickDimensions, agentData, world, projectileSizeMultiplier);
   agentData = output.totalEntities;
 
   output.newBricks.forEach((brick) => {
