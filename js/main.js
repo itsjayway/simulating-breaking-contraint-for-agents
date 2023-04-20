@@ -32,12 +32,26 @@ const wreckingBallMaterial = new THREE.MeshLambertMaterial({
 const stats = new Stats();
 document.body.appendChild(stats.dom);
 
+/* ========== INIT ========== */
+
+const projectile_init = {
+  x: -20,
+  y: 8,
+  z: 9,
+  vx: 90,
+  vy: -3,
+  vz: -4,
+  invmass: 1/10
+}
+
+const projectileSizeMultiplier = 1.5;
+
+
 // create a brick object
 const brickdepth = 2;
 const brickWidth = 2;
 const brickHeight = 2;
 
-const projectileSizeMultiplier = 1.5;
 const brickDimensions = {
   depth: brickdepth,
   width: brickWidth,
@@ -161,98 +175,9 @@ function createBallSystem() {
   // Add the suspended point to the scene
   scene.add(suspendedPoint);
 }
-/*
-function plss() {
-  // Create the suspended point
-  var suspendedPointGeometry = new THREE.BoxGeometry(2, 0.5, 2); // Change to BoxGeometry and adjust the size as needed
-  var suspendedPointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  var suspendedPoint = new THREE.Mesh(suspendedPointGeometry, suspendedPointMaterial);
-  suspendedPoint.position.set(-5, 30, 10);
-
-  // Create the wrecking ball
-  let wb = createWreckingBall();
-  scene.add(wb);
-
-  //add suspended point to
-  scene.add(suspendedPoint);
-
-  // Create the string container
-  var stringContainer = new THREE.Object3D();
-
-  // Create the string
-  var stringGeometry = new THREE.CylinderGeometry(0.1, 0.1, 20, 16);
-  var stringMaterial = new THREE.MeshBasicMaterial({ color: 0xFF00FF });
-  var string = new THREE.Mesh(stringGeometry, stringMaterial);
-  string.position.set(0, 0, 0); // Adjust the position to fit your scene
-  stringContainer.add(string);
-
-  // Position the string container between the suspended point and the ball
-  stringContainer.position.set(-5, 20, 10);
-
-  // Add the wrecking ball to the string container
-  wb.position.set(0, -10, 0); // Position the ball relative to the container
-  stringContainer.add(wb);
-
-  // Add the string container to the scene
-  scene.add(stringContainer);
-
-  // Add the suspended point to the scene
-  scene.add(suspendedPoint);
-
-  // Add the physics engine
-  const physics = new PHY.physics;
-
-  // Add the wrecking ball to the physics engine
-  const wreckingBall = new PHY.Sphere(RADIUS);
-  physics.addParticle(wreckingBall);
-
-  // Add the suspended point to the physics engine
-  const suspendedPointPhysics = new PHY.Particle();
-  suspendedPointPhysics.setPosition(
-    new PHY.Vector3(
-      suspendedPoint.position.x,
-      suspendedPoint.position.y,
-      suspendedPoint.position.z
-    )
-  );
-  physics.addParticle(suspendedPointPhysics);
-
-  // Add the string to the physics engine
-  const stringLength = 20;
-  const stringPhysics = new PHY.Spring(
-    suspendedPointPhysics,
-    wreckingBall,
-    stringLength
-  );
-  physics.addSpring(stringPhysics);
-
-  // Update the wrecking ball's position based on the physics simulation
-  const updateWreckingBall = () => {
-    const wreckingBallPosition = wreckingBall.getPosition();
-    wb.position.set(
-      wreckingBallPosition.x,
-      wreckingBallPosition.y,
-      wreckingBallPosition.z
-    );
-  };
-
-  // Render the scene
-  const render = () => {
-    stats.update();
-    requestAnimationFrame(render);
-    physics.tick();
-    updateWreckingBall();
-    renderer.render(scene, camera);
-  };
-
-  // Start the rendering loop
-  render();
-}*/
-
 
 function createWall() {
   // create a wall of bricks arranged mathematically
-  // each row is offset by half a brick
 
   const wall = new THREE.Group();
   const levels = 7;
@@ -264,17 +189,15 @@ function createWall() {
   for (let j = 0; j < levels; j++) {
     for (let i = 0; i < bricksPerLevel; i++) {
       const brick = createBrick(j + i, bricksPerLevel);
-      brick.position.x = 0 + i * brickWidth + offset;
+      brick.position.x = 0 + i * brickWidth;
       if (j % 2 === 0) {
-        // brick.rotation.y = Math.PI / 2;
         brick.position.z = i * brickWidth;
       }
       else {
         brick.position.z = i * brickWidth + offset;
       }
-      // brick.position.y = (j + 1) * brickHeight + offset * j;
       brick.position.y = (j) * brickHeight + offset * j;
-      // brick.rotation.y = Math.PI / 3;
+
       wall.add(brick);
       agentData.push({
         index: brick_idx++,
@@ -301,6 +224,7 @@ function createWall() {
         collidable: true,
         unbreakable: false
       });
+
     }
   }
   return wall;
@@ -309,14 +233,12 @@ function createWall() {
 function createProjectile() {
   // create a brick that is 'thrown' at the wall
   let projectile = createBrick(31, 20, projectileSizeMultiplier);
-  // projectile.position.set(-5 * brickWidth, 10, 5);
-  projectile.position.x = -20 * brickWidth;
-  projectile.position.y = brickDimensions.height * projectileSizeMultiplier + 5;
-  projectile.position.z = 9;
-  // projectile.rotation.y = Math.PI / 4;
+  projectile.position.x = projectile_init.x;
+  projectile.position.y = projectile_init.y;
+  projectile.position.z = projectile_init.z;
+  // projectile.rotation.y = Math.PI / 3;
   projectile.castShadow = true;
   projectile.receiveShadow = true;
-
 
   agentData.push({
     index: agentData.length,
@@ -324,13 +246,13 @@ function createProjectile() {
     width: brickDimensions.width * projectileSizeMultiplier,
     depth: brickDimensions.depth * projectileSizeMultiplier,
     mesh: projectile,
-    invmass: 1 / 3,
+    invmass: projectile_init.invmass,
     px: projectile.position.x,
     py: projectile.position.y,
     pz: projectile.position.z,
-    vx: 90,
-    vy: -3,
-    vz: -6,
+    vx: projectile_init.vx,
+    vy: projectile_init.vy,
+    vz: projectile_init.vz,
     rotation: {
       x: projectile.rotation.x,
       y: projectile.rotation.y,
@@ -453,9 +375,11 @@ function render() {
 let output;
 function animate() {
   output = PHY.step(brickDimensions, agentData, world, projectileSizeMultiplier);
-  
+
+  // update agentData to reflect updated in physics
   agentData = output.totalEntities;
 
+  // update scene array to add new bricks
   output.newBricks.forEach((brick) => {
     scene.add(brick);
   });

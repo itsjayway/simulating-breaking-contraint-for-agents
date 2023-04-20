@@ -1,12 +1,32 @@
 
 import * as THREE from "three";
 
+/* ==================== Parameters ==================== */
+const timestep = 0.0015;
+const minimumSize = Math.pow(2, -2);
+
+/* ==================== Constants ==================== */
+const epsilon = 0.0001;
+const ITERNUM = 3;
+const gravity = -0.98;
+const breakingThreshold = 60;
+
+/* ==================== Initializers ==================== */
+
+/* 
+when new bricks are created because of breaking, they're passed
+back to main to be added to the scene
+*/
 let outputBricks = [];
 
-const brickdepth = 2;
-const brickWidth = 2;
-const brickHeight = 2;
+/* ==================== Functions ==================== */
 
+export function calculate_distance(x1, y1, z1, x2, y2, z2) {
+  const dx = x1 - x2;
+  const dy = y1 - y2;
+  const dz = z1 - z2;
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
+}
 
 function createBrick(color, newBrickDimensions) {
   let brickMaterial = new THREE.MeshLambertMaterial({
@@ -24,35 +44,79 @@ function createBrick(color, newBrickDimensions) {
   brick.castShadow = true;
   brick.receiveShadow = true;
   return brick;
-
 }
-
-
-
-
-export function calculate_distance(x1, y1, z1, x2, y2, z2) {
-  const dx = x1 - x2;
-  const dy = y1 - y2;
-  const dz = z1 - z2;
-  return Math.sqrt(dx * dx + dy * dy + dz * dz);
-}
-
-
-const epsilon = 0.0001;
-const timestep = 0.003;
-const ITERNUM = 3;
-const gravity = -0.98;
-const breakingThreshold = 60;
-const minimumSize = Math.pow(2, -3);
-
 
 export function step(brickDimensions, sceneEntities, world, multiplier) {
 
   let arrayLength = sceneEntities.length;
 
+  function createTwoNewBricks(agent_i) {
+    let brick = createBrick(agent_i.mesh.material.color, {
+      height: agent_i.height / 2,
+      width: agent_i.width / 2,
+      depth: agent_i.depth / 2,
+    });
+    brick.position.x = agent_i.px;
+    brick.position.y = agent_i.py;
+    brick.position.z = agent_i.pz;
 
-  function distanceConstraint(agent_i, agent_j, desiredDistance) {
+
+    for (let i = 0; i < 2; i++) {
+      outputBricks.push(brick);
+      sceneEntities.push({
+        index: sceneEntities.length,
+        height: agent_i.height / 2,
+        width: agent_i.width / 2,
+        depth: agent_i.depth / 2,
+        mesh: brick,
+        invmass: (agent_i.height / 2 * agent_i.width / 2 * agent_i.depth / 2),
+        px: brick.position.x + (Math.random() - 0.5) * 0.1,
+        py: brick.position.y + (Math.random() - 0.5) * 0.1,
+        pz: brick.position.z + (Math.random() - 0.5) * 0.1,
+        vx: agent_i.vx + (Math.random() - 0.5) * 0.1,
+        vy: agent_i.vy + (Math.random() - 0.5) * 0.1,
+        vz: agent_i.vz + (Math.random() - 0.5) * 0.1,
+        collidable: true,
+        unbreakable: false,
+      });
+    }
   }
+
+  function updateAgent(agent) {
+    agent.height /= 2;
+    agent.width /= 2;
+    agent.depth /= 2;
+    agent.invmass /= 2;
+
+    agent.mesh.scale.x /= 2;
+    agent.mesh.scale.y /= 2;
+    agent.mesh.scale.z /= 2;
+  }
+
+  function applyVelocityIfUnbreakable(agent, nx, ny, nz, j) {
+    agent.vx -= j * nx;
+    agent.vy -= j * ny;
+    agent.vz -= j * nz;
+  }
+
+  function calculateForces(j, nx, k, tx) {
+    var force_i_n = j * nx / timestep;
+    var force_i_t = k * tx / timestep;
+
+    var force_j_n = -j * nx / timestep;
+    var force_j_t = -k * tx / timestep;
+
+    return {
+      force_i: Math.sqrt(force_i_n * force_i_n + force_i_t * force_i_t),
+      force_j: Math.sqrt(force_j_n * force_j_n + force_j_t * force_j_t),
+    };
+  }
+
+  // function distanceConstraint(agent_i, agent_j, desiredDistance) {
+  // }
+
+  // function checkRotationalCollision(agent_i, agent_j, distance) {
+  // }
 
   function collisionConstraint(agent_i, agent_j) {
     const distance = calculate_distance(
@@ -64,11 +128,34 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
       agent_j.pz
     );
 
+    if (distance < agent_i.width / 2 + agent_j.width / 2 ||
+      distance < agent_i.height / 2 + agent_j.height / 2 ||
+      distance < agent_i.depth / 2 + agent_j.depth / 2
+    ) {
 
-    if (distance < agent_i.width / 2 + agent_j.width / 2 + epsilon) {// bricks are touching
-      // console.log("collision detected");
+      // determine which dimension is overlapping the most
+      const xOverlap = agent_i.width / 2 + agent_j.width / 2 - Math.abs(agent_i.px - agent_j.px);
+      const yOverlap = agent_i.height / 2 + agent_j.height / 2 - Math.abs(agent_i.py - agent_j.py);
+      const zOverlap = agent_i.depth / 2 + agent_j.depth / 2 - Math.abs(agent_i.pz - agent_j.pz);
 
-      const penetration = agent_i.width / 2 + agent_j.width / 2 - distance;
+
+      // use max overlap dimension
+      const overlapDimensionMatrix = {
+        width: xOverlap,
+        height: yOverlap,
+        depth: zOverlap,
+      }
+
+      const maxOverlap = Math.max(xOverlap, yOverlap, zOverlap);
+
+      let dimension = '';
+      for (let key in overlapDimensionMatrix) {
+        if (overlapDimensionMatrix[key] === maxOverlap) {
+          dimension = key;
+        }
+      }
+
+      const penetration = agent_i[dimension] / 2 + agent_j[dimension] / 2 - distance;
       const nx = (agent_i.px - agent_j.px) / distance;
       const ny = (agent_i.py - agent_j.py) / distance;
       const nz = (agent_i.pz - agent_j.pz) / distance;
@@ -95,151 +182,57 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
       agent_j.py -= ny * penetration / 2;
       agent_j.pz -= nz * penetration / 2;
 
-      const force_i_n = j * nx / timestep;
-      const force_i_t = k * tx / timestep;
+      const f = calculateForces(j, nx, k, tx);
 
-      const force_j_n = j * nx / timestep;
-      const force_j_t = k * tx / timestep;
-
-      // Calculate the magnitudes of the forces acting on each agent
-      const force_i = Math.sqrt(force_i_n * force_i_n + force_i_t * force_i_t);
-      const force_j = Math.sqrt(force_j_n * force_j_n + force_j_t * force_j_t);
-
-      if (!agent_i.unbreakable) {
-        if (force_i > breakingThreshold) {
-          if (agent_i.height < minimumSize || agent_i.width < minimumSize || agent_i.depth < minimumSize) {
-            return;
+      let i = 0;
+      [agent_i, agent_j].forEach((agent) => {
+        var currentForce = i++ === 0 ? f.force_i : f.force_j
+        if (!agent.unbreakable) {
+          if (currentForce > breakingThreshold) {
+            if (agent.height < minimumSize || agent.width < minimumSize || agent.depth < minimumSize) {
+              return;
+            }
+            createTwoNewBricks(agent);
+            updateAgent(agent);
           }
-          // console.log("breaking agent_i");
-          // console.log(agent_i);
-          const brick = createBrick(agent_i.mesh.material.color, {
-            height: agent_i.height / 2,
-            width: agent_i.width / 2,
-            depth: agent_i.depth / 2,
-          });
-          brick.position.x = agent_i.px;
-          brick.position.y = agent_i.py;
-          brick.position.z = agent_i.pz;
-
-          // console.log(brick);
-
-          for (let i = 0; i < 2; i++) {
-            outputBricks.push(brick);
-            sceneEntities.push({
-              index: sceneEntities.length,
-              height: agent_i.height / 2,
-              width: agent_i.width / 2,
-              depth: agent_i.depth / 2,
-              mesh: brick,
-              invmass: (agent_i.height / 2 * agent_i.width / 2 * agent_i.depth / 2),
-              px: brick.position.x + (Math.random() - 0.5) * 0.1,
-              py: brick.position.y + (Math.random() - 0.5) * 0.1,
-              pz: brick.position.z + (Math.random() - 0.5) * 0.1,
-              vx: agent_i.vx,
-              vy: agent_i.vy,
-              vz: agent_i.vz,
-              collidable: true,
-              unbreakable: false,
-            });
-          }
-          agent_i.height /= 2;
-          agent_i.width /= 2;
-          agent_i.depth /= 2;
-          agent_i.invmass /= 2;
-
-          agent_i.mesh.scale.x /= 2;
-          agent_i.mesh.scale.y /= 2;
-          agent_i.mesh.scale.z /= 2;
-
         }
-      }
-
-      if (!agent_j.unbreakable) {
-        if (force_j > breakingThreshold) {
-          if (agent_j.height < minimumSize || agent_j.width < minimumSize || agent_j.depth < minimumSize) {
-            return;
-          }
-          // console.log("breaking agent_j");
-
-          const brick = createBrick(agent_j.mesh.material.color, {
-            height: agent_j.height / 2,
-            width: agent_j.width / 2,
-            depth: agent_j.depth / 2,
-          });
-          brick.position.x = agent_j.px + nx * penetration / 2;
-          brick.position.y = agent_j.py + ny * penetration / 2;
-          brick.position.z = agent_j.pz + nz * penetration / 2;
-
-          // console.log(brick);
-
-
-          for (let i = 0; i < 2; i++) {
-            outputBricks.push(brick);
-
-            sceneEntities.push({
-              index: sceneEntities.length,
-              height: agent_j.height / 2,
-              width: agent_j.width / 2,
-              depth: agent_j.depth / 2,
-              mesh: brick,
-              invmass: (agent_j.height / 2) * (agent_j.width / 2) * (agent_j.depth / 2),
-              px: brick.position.x + (Math.random() - 0.5) * 0.1,
-              py: brick.position.y + (Math.random() - 0.5) * 0.1,
-              pz: brick.position.z + (Math.random() - 0.5) * 0.1,
-              vx: agent_j.vx,
-              vy: agent_j.vy,
-              vz: agent_j.vz,
-              collidable: true,
-              unbreakable: false,
-            });
-          }
-
-          agent_j.height /= 2;
-          agent_j.width /= 2;
-          agent_j.depth /= 2;
-          agent_j.invmass /= 2;
-
-
-          agent_j.mesh.scale.x /= 2;
-          agent_j.mesh.scale.y /= 2;
-          agent_j.mesh.scale.z /= 2;
-          // console.log(agent_j);
-
+        else {
+          applyVelocityIfUnbreakable(agent, nx, ny, nz, j);
         }
-      }
+      });
     }
   }
 
 
   sceneEntities.forEach(function (agent) {
-    // gravity
-
+    // apply gravity
     agent.vy += gravity * timestep;
 
-    // update position
-
+    // apply friction/dampening
     if (agent.py > agent.height / 2) {
       agent.vx *= 0.999;
       agent.vz *= 0.999;
     }
     else {
-      agent.vx *= 0.97;
-      agent.vz *= 0.97;
+      agent.vx *= 0.99;
+      agent.vz *= 0.99;
     }
     agent.vy *= 0.999;
-    // if (agent.vx < 0.1) agent.vx = 0.1;
 
+    // update position
     agent.px += agent.vx * timestep;
     agent.py += agent.vy * timestep;
     agent.pz += agent.vz * timestep;
 
-    // floor constraint
+    /* ========== floor constraints ========== */
 
+    // prevent agent from going through the floor
     if (agent.py < agent.height / 2) {
       agent.py = agent.height / 2;
       agent.vy = -agent.vy * 0.1;
     }
 
+    // bounce off the wall
     if (agent.px < -world.length / 2) {
       agent.px = -world.length / 2;
       agent.vx = -agent.vx * 0.1;
@@ -261,7 +254,6 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
     }
 
     // update mesh position
-
     agent.mesh.position.x = agent.px;
     agent.mesh.position.y = agent.py;
     agent.mesh.position.z = agent.pz;
@@ -272,14 +264,15 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
     sceneEntities.forEach(function (agent_i) {
       sceneEntities.forEach(function (agent_j) {
         if (agent_i !== agent_j) {
-          distanceConstraint(agent_i, agent_j);
-          if (agent_i.collidable && agent_j.collidable) {
-            collisionConstraint(agent_i, agent_j);
-          }
+          // distanceConstraint(agent_i, agent_j);
+          // if (agent_i.collidable && agent_j.collidable) {
+          collisionConstraint(agent_i, agent_j);
+          // }
         }
       });
     });
   }
 
+  // return the updated sceneeEntities and the newBricks to render
   return { totalEntities: sceneEntities, newBricks: outputBricks };
 }
