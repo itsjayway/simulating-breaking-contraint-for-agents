@@ -282,7 +282,7 @@ function createWall() {
         width: brickDimensions.width,
         depth: brickDimensions.depth,
         mesh: brick,
-        invmass: 1,
+        invmass: 1.1,
         px: brick.position.x,
         py: brick.position.y,
         pz: brick.position.z,
@@ -310,9 +310,9 @@ function createProjectile() {
   // create a brick that is 'thrown' at the wall
   let projectile = createBrick(31, 20, projectileSizeMultiplier);
   // projectile.position.set(-5 * brickWidth, 10, 5);
-  projectile.position.x = -10 * brickWidth;
+  projectile.position.x = -20 * brickWidth;
   projectile.position.y = brickDimensions.height * projectileSizeMultiplier + 5;
-  projectile.position.z = 5;
+  projectile.position.z = 9;
   // projectile.rotation.y = Math.PI / 4;
   projectile.castShadow = true;
   projectile.receiveShadow = true;
@@ -324,20 +324,20 @@ function createProjectile() {
     width: brickDimensions.width * projectileSizeMultiplier,
     depth: brickDimensions.depth * projectileSizeMultiplier,
     mesh: projectile,
-    invmass: 1/3,
+    invmass: 1 / 3,
     px: projectile.position.x,
     py: projectile.position.y,
     pz: projectile.position.z,
-    vx: 30,
+    vx: 90,
     vy: 0,
-    vz: 2,
+    vz: -4,
     rotation: {
       x: projectile.rotation.x,
       y: projectile.rotation.y,
       z: projectile.rotation.z
     },
     collidable: true,
-    unbreakable:true
+    unbreakable: true
   });
 
   return projectile;
@@ -453,6 +453,7 @@ function render() {
 let output;
 function animate() {
   output = PHY.step(brickDimensions, agentData, world, projectileSizeMultiplier);
+  
   agentData = output.totalEntities;
 
   output.newBricks.forEach((brick) => {

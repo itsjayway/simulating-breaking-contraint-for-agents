@@ -42,8 +42,8 @@ const epsilon = 0.0001;
 const timestep = 0.003;
 const ITERNUM = 3;
 const gravity = -0.98;
-const breakingThreshold = 20;
-const minimumSize = 0.0625;
+const breakingThreshold = 40;
+const minimumSize = Math.pow(2,-3);
 
 
 export function step(brickDimensions, sceneEntities, world, multiplier) {
@@ -123,7 +123,7 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
 
           // console.log(brick);
 
-          for (let i = 2; i < 2; i++) {
+          for (let i = 0; i < 2; i++) {
             outputBricks.push(brick);
             sceneEntities.push({
               index: sceneEntities.length,
@@ -131,14 +131,15 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
               width: agent_i.width / 2,
               depth: agent_i.depth / 2,
               mesh: brick,
-              invmass: agent_i.invmass / 2,
-              px: brick.position.x,
-              py: brick.position.y,
-              pz: brick.position.z,
+              invmass: (agent_i.height / 2 * agent_i.width / 2 * agent_i.depth / 2),
+              px: brick.position.x + (Math.random() - 0.5) * 0.1,
+              py: brick.position.y + (Math.random() - 0.5) * 0.1,
+              pz: brick.position.z + (Math.random() - 0.5) * 0.1,
               vx: agent_i.vx,
               vy: agent_i.vy,
               vz: agent_i.vz,
               collidable: true,
+              unbreakable: false,
             });
           }
           agent_i.height /= 2;
@@ -181,14 +182,15 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
               width: agent_j.width / 2,
               depth: agent_j.depth / 2,
               mesh: brick,
-              invmass: agent_j.invmass / 2,
-              px: brick.position.x,
-              py: brick.position.y,
-              pz: brick.position.z,
+              invmass: (agent_j.height / 2) * (agent_j.width / 2) * (agent_j.depth / 2),
+              px: brick.position.x + (Math.random() - 0.5) * 0.1,
+              py: brick.position.y + (Math.random() - 0.5) * 0.1,
+              pz: brick.position.z + (Math.random() - 0.5) * 0.1,
               vx: agent_j.vx,
               vy: agent_j.vy,
               vz: agent_j.vz,
               collidable: true,
+              unbreakable: false,
             });
           }
 
@@ -201,7 +203,7 @@ export function step(brickDimensions, sceneEntities, world, multiplier) {
           agent_j.mesh.scale.x /= 2;
           agent_j.mesh.scale.y /= 2;
           agent_j.mesh.scale.z /= 2;
-          console.log(agent_j);
+          // console.log(agent_j);
 
         }
       }
