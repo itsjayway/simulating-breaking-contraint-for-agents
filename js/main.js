@@ -38,10 +38,10 @@ const projectile_init = {
   x: -30,
   y: 8,
   z: 0,
-  vx: 3000,
+  vx: 200,
   vy: -3,
   vz: 0,
-  invmass: 1 / 40
+  invmass: 1 / 20
 }
 
 const projectileSizeMultiplier = 1.5;
@@ -55,7 +55,7 @@ const projectileSizeMultiplier = 1.5;
 */
 
 const layoutPreset = 4;
-const p_size = 6;
+const p_size = 4;
 
 
 // create a brick object
@@ -190,7 +190,7 @@ function createBallSystem() {
 function positionGenerator(i, j, k = 0) {
   const x = i * brickWidth;
   const y = j * brickHeight;
-  const z = k;
+  const z = k * brickdepth;
   const offset = 0;
   return {
     x: x + offset,
@@ -373,7 +373,7 @@ function createWall() {
     for (let j = 0; j < p_size; j++) {
       for (let i = 0; i < p_size - j; i++) {
         for (let k = 0; k < p_size - j; k++) {
-          brick_init = positionGenerator(i, j, k);
+          brick_init = positionGenerator(i + j / 2, j, k + j / 2 - brickWidth);
           const brick = createBrick(j + i, bricksPerLevel);
           brick.position.x = brick_init.x;
           brick.position.y = brick_init.y;
@@ -411,6 +411,44 @@ function createWall() {
   }
   else if (layoutPreset === 5) {
     // stairs
+    for (let j = 0; j < p_size; j++) {
+      for (let i = 0; i < p_size; i++) {
+        for (let k = 0; k < p_size; k++) {
+          brick_init = positionGenerator(j, i, k);
+          const brick = createBrick(j + i, bricksPerLevel);
+          brick.position.x = brick_init.x;
+          brick.position.y = brick_init.y;
+          brick.position.z = brick_init.z;
+
+          wall.add(brick);
+          agentData.push({
+            index: brick_idx++,
+            height: brickDimensions.height,
+            width: brickDimensions.width,
+            depth: brickDimensions.depth,
+            mesh: brick,
+            invmass: 1.1,
+            px: brick.position.x,
+            py: brick.position.y,
+            pz: brick.position.z,
+            vx: 0,
+            vy: 0,
+            vz: 0,
+            fx: 0,
+            fy: 0,
+            fz: 0,
+            torque: 0,
+            rotation: {
+              x: brick.rotation.x,
+              y: brick.rotation.y,
+              z: brick.rotation.z
+            },
+            collidable: true,
+            unbreakable: false
+          });
+        }
+      }
+    }
   }
 
   return wall;

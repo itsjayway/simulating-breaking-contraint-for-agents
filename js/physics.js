@@ -10,7 +10,7 @@ const ITERNUM = 3;
 const gravity = -2.98;
 const breakingThreshold = 200;
 
-const accurateBreaking = false;
+const accurateBreaking = true;
 
 /* ==================== Initializers ==================== */
 
@@ -54,40 +54,55 @@ export function step(sceneEntities, world, timestep) {
   function createTwoNewBricks(agent_i) {
     // add checking for accurateBreaking to instead 
     // randomly select a plane to break on
-    let side = Math.random();
-    if(side < 0.5){
-      var brick = createBrick(agent_i.mesh.material.color, {
-      height: agent_i.height / 2,
-      width: agent_i.width,
-      depth: agent_i.depth,
-      });
+    var brick, height, width, depth;
+    if (accurateBreaking) {
+
+      let side = Math.random();
+      if (side < 0.5) {
+        height = agent_i.height / 2;
+        width = agent_i.width;
+        depth = agent_i.depth;
+        brick = createBrick(agent_i.mesh.material.color, {
+          height: height,
+          width: width,
+          depth: depth,
+        });
+      }
+      else {
+        width = agent_i.width / 2;
+        height = agent_i.height;
+        depth = agent_i.depth;
+        brick = createBrick(agent_i.mesh.material.color, {
+          height: height,
+          width: width,
+          depth: depth,
+        });
+      }
     }
-    else{
-      var brick = createBrick(agent_i.mesh.material.color, {
-      height: agent_i.height,
-      width: agent_i.width / 2,
-      depth: agent_i.depth,
+    else {
+      height = agent_i.height / Math.sqrt(2);
+      width = agent_i.width / Math.sqrt(2);
+      depth = agent_i.depth / Math.sqrt(2);
+
+      brick = createBrick(agent_i.mesh.material.color, {
+        height: height,
+        width: width,
+        depth: depth,
       });
     }
 
-    // let brick = createBrick(agent_i.mesh.material.color, {
-    //   height: agent_i.height / Math.sqrt(2),
-    //   width: agent_i.width / Math.sqrt(2),
-    //   depth: agent_i.depth / Math.sqrt(2),
-    // });
 
     brick.position.x = agent_i.px;
     brick.position.y = agent_i.py;
     brick.position.z = agent_i.pz;
 
-
     for (let i = 0; i < 2; i++) {
       outputBricks.push(brick);
       sceneEntities.push({
         index: sceneEntities.length,
-        height: agent_i.height / Math.sqrt(2),
-        width: agent_i.width / Math.sqrt(2),
-        depth: agent_i.depth / Math.sqrt(2),
+        height: height,
+        width: width,
+        depth: depth,
         mesh: brick,
         invmass: agent_i.invmass / 2,
         px: brick.position.x + (Math.random() - 0.5) * 0.1,
