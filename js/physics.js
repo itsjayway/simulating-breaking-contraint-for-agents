@@ -10,6 +10,8 @@ const ITERNUM = 3;
 const gravity = -2.98;
 const breakingThreshold = 200;
 
+const accurateBreaking = false;
+
 /* ==================== Initializers ==================== */
 
 /* 
@@ -50,6 +52,8 @@ export function step(sceneEntities, world, timestep) {
   let arrayLength = sceneEntities.length;
 
   function createTwoNewBricks(agent_i) {
+    // add checking for accurateBreaking to instead 
+    // randomly select a plane to break on
     let brick = createBrick(agent_i.mesh.material.color, {
       height: agent_i.height / Math.sqrt(2),
       width: agent_i.width / Math.sqrt(2),
@@ -68,7 +72,7 @@ export function step(sceneEntities, world, timestep) {
         width: agent_i.width / Math.sqrt(2),
         depth: agent_i.depth / Math.sqrt(2),
         mesh: brick,
-        invmass: agent_i.invmass /2,
+        invmass: agent_i.invmass / 2,
         px: brick.position.x + (Math.random() - 0.5) * 0.1,
         py: brick.position.y + (Math.random() - 0.5) * 0.1,
         pz: brick.position.z + (Math.random() - 0.5) * 0.1,
@@ -155,7 +159,7 @@ export function step(sceneEntities, world, timestep) {
       }
 
       const penetration = agent_i[dimension] / 2 + agent_j[dimension] / 2 - distance; // amount of overlap
-      
+
       // normal vector formed by the two agents
       const nx = (agent_i.px - agent_j.px) / distance;
       const ny = (agent_i.py - agent_j.py) / distance;
@@ -169,17 +173,17 @@ export function step(sceneEntities, world, timestep) {
       // relative velocity
       const b = (agent_i.vx - agent_j.vx) * nx + (agent_i.vy - agent_j.vy) * ny + (agent_i.vz - agent_j.vz) * nz;
       const d = (agent_i.vx - agent_j.vx) * tx + (agent_i.vy - agent_j.vy) * ty + (agent_i.vz - agent_j.vz) * tz;
-      
+
       const m1 = 1 / agent_i.invmass;
       const m2 = 1 / agent_j.invmass;
-      
+
       // coefficient of restitution
       const e = 0.5;
 
       // calculate impulse
       const j = -(1 + e) * b / (m1 + m2);
       const k = -(1 + e) * d / (m1 + m2);
-      
+
       // apply impulse to agents' velocities
       agent_i.vx += j * nx + k * tx;
       agent_i.vy += j * ny + k * ty;
@@ -214,6 +218,13 @@ export function step(sceneEntities, world, timestep) {
         else {
           applyVelocityIfUnbreakable(agent, nx, ny, nz, j);
         }
+      });
+
+      [agent_i, agent_j].forEach((agent) => {
+        // apply friction between agents
+        agent.vx *= 0.99;
+        agent.vy *= 0.99;
+        agent.vz *= 0.99;
       });
     }
   }
