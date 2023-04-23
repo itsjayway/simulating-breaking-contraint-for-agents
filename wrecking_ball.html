@@ -25,11 +25,15 @@
   <!-- add slider to control timestep -->
   <div style="position:absolute;top:0px;right:0px;width:300px">
     <label for="timestep">Timestep
-      <p id="timestepValue"
-      style="color:white;font-size:12px;margin:0px;padding:0px;"
-      ></p>
+      <p id="timestepValue" style="color:white;font-size:12px;margin:0px;padding:0px;"></p>
     </label>
     <input type="range" id="timestep" name="timestep" min="0.00001" max="0.01" step="0.0001" value="0.0001">
+
+    <label for="breakingThreshold">Breaking Threshold</label>
+    <p id="breakingThresholdValue" style="color:white;font-size:12px;margin:0px;padding:0px;"></p>
+    <input type="range" id="breakingThreshold" name="breakingThreshold" min="0.1" max="100" step="0.1" value="2">
+
+
   </div>
 
 </body>

@@ -2,13 +2,13 @@
 import * as THREE from "three";
 
 /* ==================== Parameters ==================== */
-const minimumSize = Math.pow(2, -2);
+const minimumSize = Math.pow(2, -3);
 
 /* ==================== Constants ==================== */
 const epsilon = 0.0001;
 const ITERNUM = 3;
 const gravity = -2.98;
-const breakingThreshold = 100;
+const breakingThreshold = 200;
 
 /* ==================== Initializers ==================== */
 
@@ -51,9 +51,9 @@ export function step(sceneEntities, world, timestep) {
 
   function createTwoNewBricks(agent_i) {
     let brick = createBrick(agent_i.mesh.material.color, {
-      height: agent_i.height / 2,
-      width: agent_i.width / 2,
-      depth: agent_i.depth / 2,
+      height: agent_i.height / Math.sqrt(2),
+      width: agent_i.width / Math.sqrt(2),
+      depth: agent_i.depth / Math.sqrt(2),
     });
     brick.position.x = agent_i.px;
     brick.position.y = agent_i.py;
@@ -64,11 +64,11 @@ export function step(sceneEntities, world, timestep) {
       outputBricks.push(brick);
       sceneEntities.push({
         index: sceneEntities.length,
-        height: agent_i.height / 2,
-        width: agent_i.width / 2,
-        depth: agent_i.depth / 2,
+        height: agent_i.height / Math.sqrt(2),
+        width: agent_i.width / Math.sqrt(2),
+        depth: agent_i.depth / Math.sqrt(2),
         mesh: brick,
-        invmass: (agent_i.height / 2 * agent_i.width / 2 * agent_i.depth / 2),
+        invmass: agent_i.invmass /2,
         px: brick.position.x + (Math.random() - 0.5) * 0.1,
         py: brick.position.y + (Math.random() - 0.5) * 0.1,
         pz: brick.position.z + (Math.random() - 0.5) * 0.1,

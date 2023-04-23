@@ -46,6 +46,16 @@ const projectile_init = {
 
 const projectileSizeMultiplier = 1.5;
 
+/* ========== layoutPreset LAYOUTS ========== 
+1: Straight wall across
+2: Straight wall sideways
+3: Skewed wall
+4: Pyramid
+5: Stairs
+*/
+
+const layoutPreset = 3;
+
 
 // create a brick object
 const brickdepth = 2;
@@ -176,10 +186,10 @@ function createBallSystem() {
   scene.add(suspendedPoint);
 }
 
-function positionGenerator(i, j) {
+function positionGenerator(i, j, k = 0) {
   const x = i * brickWidth;
   const y = j * brickHeight;
-  const z = 0;
+  const z = k;
   const offset = 0;
   return {
     x: x + offset,
@@ -190,50 +200,180 @@ function positionGenerator(i, j) {
 
 function createWall() {
   // create a wall of bricks arranged mathematically
-
   const wall = new THREE.Group();
-  const levels = 7;
-  const bricksPerLevel = 5;
 
   let brick_idx = 0;
   var brick_init;
-  for (let j = 0; j < levels; j++) {
-    for (let i = 0; i < bricksPerLevel; i++) {
-      brick_init = positionGenerator(i, j);
-      const brick = createBrick(j + i, bricksPerLevel);
-      brick.position.x = brick_init.x;
-      brick.position.y = brick_init.y;
-      brick.position.z = brick_init.z;
+  const levels = 7;
+  const bricksPerLevel = 5;
+  console.log(layoutPreset);
 
-      wall.add(brick);
-      agentData.push({
-        index: brick_idx++,
-        height: brickDimensions.height,
-        width: brickDimensions.width,
-        depth: brickDimensions.depth,
-        mesh: brick,
-        invmass: 1.1,
-        px: brick.position.x,
-        py: brick.position.y,
-        pz: brick.position.z,
-        vx: 0,
-        vy: 0,
-        vz: 0,
-        fx: 0,
-        fy: 0,
-        fz: 0,
-        torque: 0,
-        rotation: {
-          x: brick.rotation.x,
-          y: brick.rotation.y,
-          z: brick.rotation.z
-        },
-        collidable: true,
-        unbreakable: false
-      });
+  if (layoutPreset === 0 || layoutPreset === null) {
+    for (let j = 0; j < levels; j++) {
+      for (let i = 0; i < bricksPerLevel; i++) {
+        brick_init = positionGenerator(i, j);
+        const brick = createBrick(j + i, bricksPerLevel);
+        brick.position.x = brick_init.x;
+        brick.position.y = brick_init.y;
+        brick.position.z = brick_init.z;
 
+        wall.add(brick);
+        agentData.push({
+          index: brick_idx++,
+          height: brickDimensions.height,
+          width: brickDimensions.width,
+          depth: brickDimensions.depth,
+          mesh: brick,
+          invmass: 1.1,
+          px: brick.position.x,
+          py: brick.position.y,
+          pz: brick.position.z,
+          vx: 0,
+          vy: 0,
+          vz: 0,
+          fx: 0,
+          fy: 0,
+          fz: 0,
+          torque: 0,
+          rotation: {
+            x: brick.rotation.x,
+            y: brick.rotation.y,
+            z: brick.rotation.z
+          },
+          collidable: true,
+          unbreakable: false
+        });
+
+      }
     }
   }
+  else if (layoutPreset === 1) {
+    // flat
+    for (let j = 0; j < levels; j++) {
+      for (let i = 0; i < bricksPerLevel; i++) {
+        brick_init = positionGenerator(j + 13, 0, i);
+        const brick = createBrick(j + i, bricksPerLevel);
+        brick.position.x = brick_init.x;
+        brick.position.y = brick_init.y;
+        brick.position.z = brick_init.z;
+
+        wall.add(brick);
+        agentData.push({
+          index: brick_idx++,
+          height: brickDimensions.height,
+          width: brickDimensions.width,
+          depth: brickDimensions.depth,
+          mesh: brick,
+          invmass: 1.1,
+          px: brick.position.x,
+          py: brick.position.y,
+          pz: brick.position.z,
+          vx: 0,
+          vy: 0,
+          vz: 0,
+          fx: 0,
+          fy: 0,
+          fz: 0,
+          torque: 0,
+          rotation: {
+            x: brick.rotation.x,
+            y: brick.rotation.y,
+            z: brick.rotation.z
+          },
+          collidable: true,
+          unbreakable: false
+        });
+
+      }
+    }
+  }
+  else if (layoutPreset === 2) {
+    // straight wall sideways
+    for (let j = 0; j < levels; j++) {
+      for (let i = 0; i < bricksPerLevel; i++) {
+        brick_init = positionGenerator(0, j + 1, i - 2.5);
+        const brick = createBrick(j + i, bricksPerLevel);
+        brick.position.x = brick_init.x;
+        brick.position.y = brick_init.y;
+        brick.position.z = brick_init.z;
+
+        wall.add(brick);
+        agentData.push({
+          index: brick_idx++,
+          height: brickDimensions.height,
+          width: brickDimensions.width,
+          depth: brickDimensions.depth,
+          mesh: brick,
+          invmass: 1.1,
+          px: brick.position.x,
+          py: brick.position.y,
+          pz: brick.position.z,
+          vx: 0,
+          vy: 0,
+          vz: 0,
+          fx: 0,
+          fy: 0,
+          fz: 0,
+          torque: 0,
+          rotation: {
+            x: brick.rotation.x,
+            y: brick.rotation.y,
+            z: brick.rotation.z
+          },
+          collidable: true,
+          unbreakable: false
+        });
+
+      }
+    }
+  }
+  else if (layoutPreset === 3) {
+    // skewed wall
+    for (let j = 0; j < levels; j++) {
+      for (let i = 0; i < bricksPerLevel; i++) {
+        brick_init = positionGenerator(i, j, i);
+        const brick = createBrick(j + i, bricksPerLevel);
+        brick.position.x = brick_init.x;
+        brick.position.y = brick_init.y;
+        brick.position.z = brick_init.z;
+
+        wall.add(brick);
+        agentData.push({
+          index: brick_idx++,
+          height: brickDimensions.height,
+          width: brickDimensions.width,
+          depth: brickDimensions.depth,
+          mesh: brick,
+          invmass: 1.1,
+          px: brick.position.x,
+          py: brick.position.y,
+          pz: brick.position.z,
+          vx: 0,
+          vy: 0,
+          vz: 0,
+          fx: 0,
+          fy: 0,
+          fz: 0,
+          torque: 0,
+          rotation: {
+            x: brick.rotation.x,
+            y: brick.rotation.y,
+            z: brick.rotation.z
+          },
+          collidable: true,
+          unbreakable: false
+        });
+
+      }
+    }
+  }
+  else if (layoutPreset === 4) {
+    // pyramid
+  }
+  else if (layoutPreset === 5) {
+    // stairs
+  }
+
   return wall;
 }
 
