@@ -54,11 +54,28 @@ export function step(sceneEntities, world, timestep) {
   function createTwoNewBricks(agent_i) {
     // add checking for accurateBreaking to instead 
     // randomly select a plane to break on
-    let brick = createBrick(agent_i.mesh.material.color, {
-      height: agent_i.height / Math.sqrt(2),
-      width: agent_i.width / Math.sqrt(2),
-      depth: agent_i.depth / Math.sqrt(2),
-    });
+    let side = Math.random();
+    if(side < 0.5){
+      var brick = createBrick(agent_i.mesh.material.color, {
+      height: agent_i.height / 2,
+      width: agent_i.width,
+      depth: agent_i.depth,
+      });
+    }
+    else{
+      var brick = createBrick(agent_i.mesh.material.color, {
+      height: agent_i.height,
+      width: agent_i.width / 2,
+      depth: agent_i.depth,
+      });
+    }
+
+    // let brick = createBrick(agent_i.mesh.material.color, {
+    //   height: agent_i.height / Math.sqrt(2),
+    //   width: agent_i.width / Math.sqrt(2),
+    //   depth: agent_i.depth / Math.sqrt(2),
+    // });
+
     brick.position.x = agent_i.px;
     brick.position.y = agent_i.py;
     brick.position.z = agent_i.pz;
