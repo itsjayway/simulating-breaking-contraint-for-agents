@@ -8,7 +8,7 @@ const minimumSize = Math.pow(2, -2);
 const epsilon = 0.0001;
 const ITERNUM = 3;
 const gravity = -2.98;
-const breakingThreshold = 200;
+// const breakingThreshold = 200;
 
 const accurateBreaking = false;
 
@@ -47,7 +47,7 @@ function createBrick(color, newBrickDimensions) {
   return brick;
 }
 
-export function step(sceneEntities, world, timestep) {
+export function step(sceneEntities, world, timestep, breakingThreshold) {
 
   let arrayLength = sceneEntities.length;
 
