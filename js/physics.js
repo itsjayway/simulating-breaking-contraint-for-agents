@@ -2,7 +2,7 @@
 import * as THREE from "three";
 
 /* ==================== Parameters ==================== */
-const minimumSize = Math.pow(2, -3);
+const minimumSize = Math.pow(2, -2);
 
 /* ==================== Constants ==================== */
 const epsilon = 0.0001;
@@ -10,7 +10,7 @@ const ITERNUM = 3;
 const gravity = -2.98;
 const breakingThreshold = 200;
 
-const accurateBreaking = true;
+const accurateBreaking = false;
 
 /* ==================== Initializers ==================== */
 
@@ -254,9 +254,11 @@ export function step(sceneEntities, world, timestep) {
 
       [agent_i, agent_j].forEach((agent) => {
         // apply friction between agents
-        agent.vx *= 0.99;
-        agent.vy *= 0.99;
-        agent.vz *= 0.99;
+        if (agent.unbreakable) {
+          agent.vx *= 0.99;
+          agent.vy *= 0.99;
+          agent.vz *= 0.99;
+        }
       });
     }
   }

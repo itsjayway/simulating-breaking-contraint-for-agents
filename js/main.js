@@ -36,7 +36,7 @@ document.body.appendChild(stats.dom);
 
 const projectile_init = {
   x: -30,
-  y: 8,
+  y: 4,
   z: 0,
   vx: 200,
   vy: -3,
@@ -54,7 +54,7 @@ const projectileSizeMultiplier = 1.5;
 5: Stairs
 */
 
-const layoutPreset = 4;
+const layoutPreset = 2;
 const p_size = 4;
 
 
