@@ -57,7 +57,6 @@ const projectileSizeMultiplier = 1.5;
 const layoutPreset = 2;
 const p_size = 4;
 
-
 // create a brick object
 const brickdepth = 2;
 const brickWidth = 2;
@@ -600,7 +599,13 @@ let output;
 function animate() {
   let timestep = document.getElementById("timestep").value;
   document.getElementById("timestepValue").innerHTML = timestep;
-  output = PHY.step(agentData, world, timestep);
+  let breakingThreshold = document.getElementById("breakingThreshold").value;
+  document.getElementById("breakingThresholdValue").innerHTML = breakingThreshold;
+
+  output = PHY.step(agentData, world, timestep, breakingThreshold);
+
+
+
 
   // update agentData to reflect updated in physics
   agentData = output.totalEntities;
