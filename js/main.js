@@ -206,7 +206,7 @@ function createWall() {
   var brick_init;
   const levels = 7;
   const bricksPerLevel = 5;
-  console.log(layoutPreset);
+  // console.log(layoutPreset);
 
   if (layoutPreset === 0 || layoutPreset === null) {
     for (let j = 0; j < levels; j++) {
@@ -596,27 +596,34 @@ function render() {
 }
 
 let output;
+
+let started = false;
 function animate() {
   let timestep = document.getElementById("timestep").value;
   document.getElementById("timestepValue").innerHTML = timestep;
   let breakingThreshold = document.getElementById("breakingThreshold").value;
   document.getElementById("breakingThresholdValue").innerHTML = breakingThreshold;
+  if (started) {
+    output = PHY.step(agentData, world, timestep, breakingThreshold);
+    // update agentData to reflect updated in physics
+    agentData = output.totalEntities;
 
-  output = PHY.step(agentData, world, timestep, breakingThreshold);
+    // update scene array to add new bricks
+    output.newBricks.forEach((brick) => {
+      scene.add(brick);
+    });
 
-
-
-
-  // update agentData to reflect updated in physics
-  agentData = output.totalEntities;
-
-  // update scene array to add new bricks
-  output.newBricks.forEach((brick) => {
-    scene.add(brick);
-  });
-
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  else {
+    // get the start button
+    let startButton = document.getElementById("startButton");
+    startButton.addEventListener("click", function () {
+      started = true;
+      animate();
+    });
+  }
 }
 
 requestAnimationFrame(animate);

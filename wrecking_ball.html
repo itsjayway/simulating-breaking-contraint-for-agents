@@ -16,7 +16,6 @@
   }
 </script>
 
-
   <script type="module" src="./js/main.js"></script>
 
 </head>
@@ -25,16 +24,22 @@
   <!-- add slider to control timestep -->
   <div style="position:absolute;top:0px;right:0px;width:300px">
     <label for="timestep">Timestep
+      <p style="color:white;font-size:12px;margin:0px;padding:0px;">
+        Timestep (0.0001: slow, 0.01: fast)
+      </p>
       <p id="timestepValue" style="color:white;font-size:12px;margin:0px;padding:0px;"></p>
     </label>
     <input type="range" id="timestep" name="timestep" min="0.00001" max="0.01" step="0.0001" value="0.0001">
 
     <label for="breakingThreshold">Breaking Threshold</label>
+    <p style="color:white;font-size:12px;margin:0px;padding:0px;">
+      Breaking threshold (50: easy, 500: hard)
+    </p>
     <p id="breakingThresholdValue" style="color:white;font-size:12px;margin:0px;padding:0px;"></p>
-    <input type="range" id="breakingThreshold" name="breakingThreshold" min="1" max="500" step="1" value="2">
-
-
+    <input type="range" id="breakingThreshold" name="breakingThreshold" min="50" max="500" step="1" value="200">
   </div>
+
+  <button id="startButton" style="position:absolute;top:0px;left:50%;">Start Script</button>
 
 </body>
 
