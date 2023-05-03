@@ -9,9 +9,9 @@ Instructions:
   a) There are sliders that adjust the values of the timestep variable and breakingThreshold variable. The default values are optimal. Increasing the timestep      will make the simulation run faster. Reducing the breaking threshold will make the bricks easier to break. Increasing the breaking threshold will make        the bricks hard to break.
   b) There are five predefined structures that can be implemented. In order to simulate each structure, the layoutPreset variable needs to be modified.              This variable can be found in main.js on line 57. The following is a a list of each value and the corresponding structures associated with those values:
   
-     const layoutPreset = 1; //Wall laid flat, resembling a paved area of bricks
-     const layoutPreset = 2; //Wall standing straight up
-     const layoutPreset = 3; //Pillars arranged diagonally, forming a diagonal wall
-     const layoutPreset = 4; //Pyramid structure
-     const layoutpreset = 5; //4x4x4 cube
+     const layoutPreset = 1;  Wall laid flat, resembling a paved area of bricks
+     const layoutPreset = 2;  Wall standing straight up
+     const layoutPreset = 3;  Pillars arranged diagonally, forming a diagonal wall
+     const layoutPreset = 4;  Pyramid structure
+     const layoutpreset = 5;  4x4x4 cube
      
