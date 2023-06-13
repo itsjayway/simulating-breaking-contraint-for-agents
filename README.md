@@ -1,6 +1,11 @@
+
+![image](https://github.com/jibranabsarulislam/cs485-wreckingBall/assets/70596906/3025f044-46cc-449e-99c0-ca46ab68c1f9)
+
+### Slides link: https://docs.google.com/presentation/d/1TPKW42lxpiW0mEz1YzxVya_1klS9PkXbDWdFpSNEFX0/edit?usp=sharing
+
 # cs485-wreckingBall
 
-Andrew Snedeker & Jibran Absarulislam
+### Andrew Snedeker & Jibran Absarulislam
 
 Instructions: 
 1) Run server.py, and connect to http://localhost:1337/
@@ -14,4 +19,3 @@ Instructions:
      const layoutPreset = 3;  //Pillars arranged diagonally, forming a diagonal wall <br>
      const layoutPreset = 4;  //Pyramid structure <br>
      const layoutpreset = 5;  //4x4x4 cube <br>
-     
